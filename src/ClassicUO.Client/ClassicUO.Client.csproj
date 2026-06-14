@@ -101,7 +101,6 @@
     <EmbeddedResource Include="Game\Managers\DefaultSpellIndicatorConfig.json" />
     <EmbeddedResource Include="Configuration\language.ini" />
     <EmbeddedResource Include="Configuration\language.ZH.ini" />
-    <EmbeddedResource Include="Configuration\Language.ZH.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -160,6 +159,12 @@
   <Target Name="GenerateDocs" AfterTargets="Build">
     <Message Text="Running: dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj $(DocFileArgs)" />
     <Exec Command='dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj "$(ProjectDir)/LegionScripting/docs" $(DocFileArgs)' />
+  </Target>
+
+  <Target Name="CopyTranslationFiles" AfterTargets="Build">
+    <MakeDir Directories="$(TargetDir)Data" />
+    <Copy SourceFiles="$(ProjectDir)Configuration\language.ZH.ini" DestinationFolder="$(TargetDir)Data" />
+    <Copy SourceFiles="$(ProjectDir)Configuration\Language.ZH.json" DestinationFolder="$(TargetDir)Data" />
   </Target>
 
   <Target Name="CreateVersionFile" AfterTargets="Build">

@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
@@ -11,8 +12,11 @@ public static class DressAgentTabContent
 {
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.Agents.Dress;
+        var common = Language.Instance.UiCommons;
+
         if (DressAgentManager.Instance == null)
-            return new MyraLabel("Dress Agent not loaded", MyraLabel.TextStyle.P);
+            return new MyraLabel(lang.DressAgentNotLoaded, MyraLabel.TextStyle.P);
 
         DressConfig? selectedConfig = null;
         var leftPanel = new VerticalStackPanel { Spacing = 4 };
@@ -23,16 +27,16 @@ public static class DressAgentTabContent
             itemsPanel.Widgets.Clear();
             if (selectedConfig == null || selectedConfig.Items.Count == 0)
             {
-                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.TextStyle.P));
+                itemsPanel.Widgets.Add(new MyraLabel(lang.NoItemsConfigured, MyraLabel.TextStyle.P));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Serial"),
-                GridColumnInfo.Fill("Name"),
-                GridColumnInfo.Auto("Layer"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto(lang.ColSerial),
+                GridColumnInfo.Fill(lang.ColName),
+                GridColumnInfo.Auto(lang.ColLayer),
+                GridColumnInfo.Auto(lang.ColActions)
             );
 
             int dataRow = 1;
@@ -43,11 +47,11 @@ public static class DressAgentTabContent
                 grid.AddWidget(new MyraLabel(item.Name, MyraLabel.TextStyle.P), dataRow, 1);
                 grid.AddWidget(new MyraLabel(((Layer)item.Layer).ToString(), MyraLabel.TextStyle.P), dataRow, 2);
                 DressItem captured = item;
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton(common.Delete, () =>
                 {
                     DressAgentManager.Instance.RemoveItemFromConfig(selectedConfig, captured.Serial);
                     BuildItemsGrid(itemsPanel);
-                }) { Tooltip = "Remove this item" }), dataRow, 3);
+                }) { Tooltip = lang.RemoveThisItem }), dataRow, 3);
                 dataRow++;
             }
 
@@ -57,11 +61,11 @@ public static class DressAgentTabContent
         void BuildConfigList()
         {
             leftPanel.Widgets.Clear();
-            leftPanel.Widgets.Add(new MyraLabel("Dress Configurations", MyraLabel.TextStyle.H3));
-            leftPanel.Widgets.Add(new MyraButton("Add Configuration", () =>
+            leftPanel.Widgets.Add(new MyraLabel(lang.DressConfigurations, MyraLabel.TextStyle.H3));
+            leftPanel.Widgets.Add(new MyraButton(lang.AddConfiguration, () =>
             {
                 DressConfig newConfig = DressAgentManager.Instance.CreateNewConfig(
-                    $"Config {DressAgentManager.Instance.CurrentPlayerConfigs.Count + 1}");
+                    string.Format(lang.ConfigNameFormat, DressAgentManager.Instance.CurrentPlayerConfigs.Count + 1));
                 selectedConfig = newConfig;
                 BuildConfigList();
                 BuildConfigDetails();
@@ -70,13 +74,13 @@ public static class DressAgentTabContent
             foreach (DressConfig config in DressAgentManager.Instance.CurrentPlayerConfigs)
             {
                 DressConfig captured = config;
-                var btn = new MyraButton($"{config.Name} ({config.Items.Count} items)", () =>
+                var btn = new MyraButton(string.Format(lang.ConfigItemsFormat, config.Name, config.Items.Count), () =>
                 {
                     selectedConfig = captured;
                     BuildConfigDetails();
                 });
                 if (!string.IsNullOrEmpty(config.CharacterName))
-                    btn.Tooltip = $"Character: {config.CharacterName}";
+                    btn.Tooltip = string.Format(lang.CharacterTooltipFormat, config.CharacterName);
                 leftPanel.Widgets.Add(btn);
             }
         }
@@ -86,7 +90,7 @@ public static class DressAgentTabContent
             rightPanel.Widgets.Clear();
             if (selectedConfig == null)
             {
-                rightPanel.Widgets.Add(new MyraLabel("Select a configuration to view details", MyraLabel.TextStyle.P));
+                rightPanel.Widgets.Add(new MyraLabel(lang.SelectConfigToViewDetails, MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -101,33 +105,33 @@ public static class DressAgentTabContent
                 }
             };
             var nameRow = new HorizontalStackPanel { Spacing = 4 };
-            nameRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
+            nameRow.Widgets.Add(new MyraLabel(lang.NameLabel, MyraLabel.TextStyle.P));
             nameRow.Widgets.Add(nameBox);
             rightPanel.Widgets.Add(nameRow);
 
             // Action buttons
             var actionRow = new HorizontalStackPanel { Spacing = 4 };
-            actionRow.Widgets.Add(new MyraButton("Dress", () =>
+            actionRow.Widgets.Add(new MyraButton(lang.Dress, () =>
             {
                 DressAgentManager.Instance.DressFromConfig(selectedConfig);
-                GameActions.Print($"Dressing from config: {selectedConfig.Name}");
+                GameActions.Print(string.Format(lang.DressingFromConfig, selectedConfig.Name));
             }));
-            actionRow.Widgets.Add(new MyraButton("Undress", () =>
+            actionRow.Widgets.Add(new MyraButton(lang.Undress, () =>
             {
                 DressAgentManager.Instance.UndressFromConfig(selectedConfig);
-                GameActions.Print($"Undressing from config: {selectedConfig.Name}");
+                GameActions.Print(string.Format(lang.UndressingFromConfig, selectedConfig.Name));
             }));
-            actionRow.Widgets.Add(new MyraButton("Create Dress Macro", () =>
+            actionRow.Widgets.Add(new MyraButton(lang.CreateDressMacro, () =>
             {
                 DressAgentManager.Instance.CreateDressMacro(selectedConfig.Name);
-                GameActions.Print($"Created Dress Macro: {selectedConfig.Name}");
+                GameActions.Print(string.Format(lang.CreatedDressMacro, selectedConfig.Name));
             }));
-            actionRow.Widgets.Add(new MyraButton("Create Undress Macro", () =>
+            actionRow.Widgets.Add(new MyraButton(lang.CreateUndressMacro, () =>
             {
                 DressAgentManager.Instance.CreateUndressMacro(selectedConfig.Name);
-                GameActions.Print($"Created Undress Macro: {selectedConfig.Name}");
+                GameActions.Print(string.Format(lang.CreatedUndressMacro, selectedConfig.Name));
             }));
-            actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+            actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(common.Delete, () =>
             {
                 DressAgentManager.Instance.DeleteConfig(selectedConfig);
                 List<DressConfig> configs = DressAgentManager.Instance.CurrentPlayerConfigs;
@@ -142,73 +146,73 @@ public static class DressAgentTabContent
             rightPanel.Widgets.Add(MyraCheckButton.CreateWithCallback(
                 selectedConfig.UseKREquipPacket,
                 b => { selectedConfig.UseKREquipPacket = b; DressAgentManager.Instance.Save(); },
-                "Use KR Equip Packet (faster)",
-                "Uses KR equip/unequip packets for faster operation"));
+                lang.UseKREquipPacket,
+                lang.UseKREquipPacketTooltip));
 
             // Undress bag
             rightPanel.Widgets.Add(new MyraSpacer(15, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Undress Bag Settings", MyraLabel.TextStyle.H3));
+            rightPanel.Widgets.Add(new MyraLabel(lang.UndressBagSettings, MyraLabel.TextStyle.H3));
             var undressBagRow = new HorizontalStackPanel { Spacing = 4 };
-            undressBagRow.Widgets.Add(new MyraButton("Set Undress Bag", () =>
+            undressBagRow.Widgets.Add(new MyraButton(lang.SetUndressBag, () =>
             {
-                GameActions.Print("Select container for undressed items", 82);
+                GameActions.Print(lang.SelectContainerForUndressedItems, 82);
                 World.Instance.TargetManager.SetTargeting(target =>
                 {
                     if (target is Entity entity && SerialHelper.IsItem(entity))
                     {
                         if (selectedConfig == null) return;
                         DressAgentManager.Instance.SetUndressBag(selectedConfig, entity.Serial);
-                        GameActions.Print($"Undress bag set to {entity.Serial:X}", Constants.HUE_SUCCESS);
+                        GameActions.Print(string.Format(lang.UndressBagSet, $"{entity.Serial:X}"), Constants.HUE_SUCCESS);
                         BuildConfigDetails();
                     }
                     else
-                        GameActions.Print("Only items can be selected!");
+                        GameActions.Print(lang.OnlyItemsCanBeSelected);
                 });
             }));
             if (selectedConfig.UndressBagSerial != 0)
             {
-                undressBagRow.Widgets.Add(new MyraLabel($"Current: ({selectedConfig.UndressBagSerial:X})", MyraLabel.TextStyle.P));
-                undressBagRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Clear", () =>
+                undressBagRow.Widgets.Add(new MyraLabel(string.Format(lang.CurrentSerialFormat, $"{selectedConfig.UndressBagSerial:X}"), MyraLabel.TextStyle.P));
+                undressBagRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(common.Clear, () =>
                 {
                     DressAgentManager.Instance.SetUndressBag(selectedConfig, 0);
                     BuildConfigDetails();
                 })));
             }
             else
-                undressBagRow.Widgets.Add(new MyraLabel("Default: Your backpack", MyraLabel.TextStyle.P));
+                undressBagRow.Widgets.Add(new MyraLabel(lang.DefaultYourBackpack, MyraLabel.TextStyle.P));
             rightPanel.Widgets.Add(undressBagRow);
 
             // Items section
             rightPanel.Widgets.Add(new MyraSpacer(15, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Items to Dress/Undress", MyraLabel.TextStyle.H3));
+            rightPanel.Widgets.Add(new MyraLabel(lang.ItemsToDressUndress, MyraLabel.TextStyle.H3));
             var itemsPanel = new VerticalStackPanel { Spacing = 2 };
             var itemActionRow = new HorizontalStackPanel { Spacing = 4 };
-            itemActionRow.Widgets.Add(new MyraButton("Add Currently Equipped", () =>
+            itemActionRow.Widgets.Add(new MyraButton(lang.AddCurrentlyEquipped, () =>
             {
                 DressAgentManager.Instance.AddCurrentlyEquippedItems(selectedConfig);
-                GameActions.Print("Added currently equipped items to config");
+                GameActions.Print(lang.AddedCurrentlyEquippedItems);
                 BuildItemsGrid(itemsPanel);
             }));
-            itemActionRow.Widgets.Add(new MyraButton("Target Item to Add", () =>
+            itemActionRow.Widgets.Add(new MyraButton(lang.TargetItemToAdd, () =>
             {
-                GameActions.Print("Target an item to add to this config", 82);
+                GameActions.Print(lang.TargetItemToAddPrint, 82);
                 World.Instance.TargetManager.SetTargeting(obj =>
                 {
                     if (obj is Entity entity && SerialHelper.IsItem(entity))
                     {
                         if (selectedConfig == null) return;
                         DressAgentManager.Instance.AddItemToConfig(selectedConfig, entity.Serial, entity.Name);
-                        GameActions.Print($"Added item: {entity.Name}");
+                        GameActions.Print(string.Format(lang.AddedItem, entity.Name));
                         BuildItemsGrid(itemsPanel);
                     }
                     else
-                        GameActions.Print("Only items can be added!");
+                        GameActions.Print(lang.OnlyItemsCanBeAdded);
                 });
             }));
-            itemActionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Clear All Items", () =>
+            itemActionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(lang.ClearAllItems, () =>
             {
                 DressAgentManager.Instance.ClearConfig(selectedConfig);
-                GameActions.Print("Cleared all items from config");
+                GameActions.Print(lang.ClearedAllItems);
                 BuildItemsGrid(itemsPanel);
             })));
             rightPanel.Widgets.Add(itemActionRow);

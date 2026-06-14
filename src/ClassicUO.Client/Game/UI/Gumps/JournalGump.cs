@@ -102,7 +102,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "System",
+                Language.Instance.JournalGump.System,
                 font,
                 0x0386,
                 false
@@ -117,7 +117,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Objects",
+                Language.Instance.JournalGump.Objects,
                 font,
                 0x0386,
                 false
@@ -132,7 +132,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Client",
+                Language.Instance.JournalGump.Client,
                 font,
                 0x0386,
                 false
@@ -147,7 +147,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Guild",
+                Language.Instance.JournalGump.Guild,
                 font,
                 0x0386,
                 false

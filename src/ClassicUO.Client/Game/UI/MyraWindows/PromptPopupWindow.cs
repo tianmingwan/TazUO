@@ -50,14 +50,14 @@ public class PromptPopupWindow : MyraControl
     /// user disable the popup for future system prompts (handling them through chat instead).
     /// </summary>
     public PromptPopupWindow(World world) : this(
-        "Server Prompt",
-        "The server is requesting input:",
+        Language.Instance.Scripting.ServerPromptTitle,
+        Language.Instance.Scripting.ServerRequestingInput,
         text => SendResponse(world, text, text.Length < 1),
-        "Submit",
-        "Cancel",
+        Language.Instance.Scripting.Submit,
+        Language.Instance.Scripting.Cancel_,
         () => SendResponse(world, string.Empty, true),
         string.Empty,
-        "Enter your response...",
+        Language.Instance.Scripting.EnterYourResponse,
         BuildDisablePopupCheckbox()
     )
     {
@@ -124,8 +124,8 @@ public class PromptPopupWindow : MyraControl
         MyraCheckButton.CreateWithCallback(
             !ProfileManager.CurrentProfile.UsePromptPopup,
             isChecked => ProfileManager.CurrentProfile.UsePromptPopup = !isChecked,
-            "Disable this popup (use chat instead)",
-            "When checked, server prompts will only be handled through the chat input"
+            Language.Instance.Scripting.DisableThisPopup,
+            Language.Instance.Scripting.DisablePopupTooltip
         );
 
     private static void SendResponse(World world, string text, bool cancel)

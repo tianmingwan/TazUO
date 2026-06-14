@@ -13,33 +13,36 @@ public static class AutoBuyAgentTabContent
     public static Widget Build()
     {
         Profile? profile = ProfileManager.CurrentProfile;
+        var lang = Language.Instance.Assistant.Agents.AutoBuy;
+        var common = Language.Instance.UiCommons;
+
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
+            return new MyraLabel(lang.ProfileNotLoaded, MyraLabel.TextStyle.P);
 
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.BuyAgentEnabled, b => profile.BuyAgentEnabled = b, "Enable Auto Buy"));
+            profile.BuyAgentEnabled, b => profile.BuyAgentEnabled = b, lang.EnableAutoBuy));
 
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.BuyAgentSubContainers, b => profile.BuyAgentSubContainers = b, "Include sub containers?",
-            "This will also count items inside containers in your backpack (Containers that have not been opened yet may not have an accurate count of contents)."));
+            profile.BuyAgentSubContainers, b => profile.BuyAgentSubContainers = b, lang.IncludeSubContainers,
+            lang.IncludeSubContainersTooltip));
 
-        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(lang.OptionsHeader, MyraLabel.TextStyle.H3));
         root.Widgets.Add(MyraHSlider.SliderWithLabel(
-            "Max total items",
+            lang.MaxTotalItems,
             out _,
             v => profile.BuyAgentMaxItems = (int)v,
             0, 1000,
             profile.BuyAgentMaxItems));
         root.Widgets.Add(MyraHSlider.SliderWithLabel(
-            "Max unique items",
+            lang.MaxUniqueItems,
             out _,
             v => profile.BuyAgentMaxUniques = (int)v,
             0, 100,
             profile.BuyAgentMaxUniques));
 
-        root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(lang.EntriesHeader, MyraLabel.TextStyle.H3));
 
         var entriesPanel = new VerticalStackPanel { Spacing = 4 };
 
@@ -50,20 +53,20 @@ public static class AutoBuyAgentTabContent
 
             if (entries.Count == 0)
             {
-                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.H3));
+                entriesPanel.Widgets.Add(new MyraLabel(lang.NoEntriesConfigured, MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Art"),
-                GridColumnInfo.Fill("Graphic"),
-                GridColumnInfo.Fill("Hue"),
-                GridColumnInfo.Fill("Max Amount"),
-                GridColumnInfo.Fill("Restock Up To"),
-                GridColumnInfo.Fill("Max Price"),
-                GridColumnInfo.Auto("Enabled"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto(lang.ColArt),
+                GridColumnInfo.Fill(lang.ColGraphic),
+                GridColumnInfo.Fill(lang.ColHue),
+                GridColumnInfo.Fill(lang.ColMaxAmount),
+                GridColumnInfo.Fill(lang.ColRestockUpTo),
+                GridColumnInfo.Fill(lang.ColMaxPrice),
+                GridColumnInfo.Auto(lang.ColEnabled),
+                GridColumnInfo.Auto(lang.ColActions)
             );
 
             int dataRow = 1;
@@ -94,7 +97,7 @@ public static class AutoBuyAgentTabContent
                 var maxAmountBox = new MyraInputBox
                 {
                     Text = entry.MaxAmount == ushort.MaxValue ? "0" : entry.MaxAmount.ToString(),
-                    Tooltip = "Set to 0 for unlimited.",
+                    Tooltip = lang.SetToZeroUnlimited,
                 };
                 maxAmountBox.TextChangedByUser += (_, _) =>
                 {
@@ -106,7 +109,7 @@ public static class AutoBuyAgentTabContent
                 var restockBox = new MyraInputBox
                 {
                     Text = entry.RestockUpTo.ToString(),
-                    Tooltip = "Amount to restock up to when buying (0 = disabled).",
+                    Tooltip = lang.RestockTooltip,
                 };
                 restockBox.TextChangedByUser += (_, _) =>
                 {
@@ -117,7 +120,7 @@ public static class AutoBuyAgentTabContent
                 var maxPriceBox = new MyraInputBox
                 {
                     Text = entry.MaxPrice.ToString(),
-                    Tooltip = "Maximum price per item (0 = no limit).",
+                    Tooltip = lang.MaxPriceTooltip,
                 };
                 maxPriceBox.TextChangedByUser += (_, _) =>
                 {
@@ -129,7 +132,7 @@ public static class AutoBuyAgentTabContent
                 cb.HorizontalAlignment = HorizontalAlignment.Center;
                 grid.AddWidget(cb, dataRow, 6);
 
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton(common.Delete, () =>
                 {
                     BuySellAgent.Instance?.DeleteConfig(entry);
                     BuildEntriesList();
@@ -145,24 +148,24 @@ public static class AutoBuyAgentTabContent
 
         // Inline add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newGraphicBox = new MyraInputBox { HintText = "Graphic ID", Width = 80 };
-        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1=any)");
-        var newMaxAmountBox = new MyraInputBox { HintText = "Max Amount (0=unlimited)", Width = 130 };
-        var newRestockBox = new MyraInputBox { HintText = "Restock Up To", Width = 100 };
-        var newMaxPriceBox = new MyraInputBox { HintText = "Max Price (0=no limit)", Width = 110 };
+        var newGraphicBox = new MyraInputBox { HintText = lang.GraphicIdHint, Width = 80 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, lang.HueAnyHint);
+        var newMaxAmountBox = new MyraInputBox { HintText = lang.MaxAmountHint, Width = 130 };
+        var newRestockBox = new MyraInputBox { HintText = lang.RestockUpToHint, Width = 100 };
+        var newMaxPriceBox = new MyraInputBox { HintText = lang.MaxPriceHint, Width = 110 };
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow1.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel(lang.GraphicLabel, MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newGraphicBox);
-        addFieldsRow1.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel(lang.HueLabel, MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newHueBox);
 
         var addFieldsRow2 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow2.Widgets.Add(new MyraLabel("Max Amount:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel(lang.MaxAmountLabel, MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newMaxAmountBox);
-        addFieldsRow2.Widgets.Add(new MyraLabel("Restock Up To:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel(lang.RestockUpToLabel, MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newRestockBox);
-        addFieldsRow2.Widgets.Add(new MyraLabel("Max Price:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel(lang.MaxPriceLabel, MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newMaxPriceBox);
 
         void ClearAddFields()
@@ -175,7 +178,7 @@ public static class AutoBuyAgentTabContent
         }
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-        addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(common.Add, () =>
         {
             if (StringHelper.TryParseInt(newGraphicBox.Text, out int graphic))
             {
@@ -201,23 +204,23 @@ public static class AutoBuyAgentTabContent
                 BuildEntriesList();
             }
         }));
-        addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(common.Cancel, () =>
         {
             addEntryPanel.Visible = false;
             ClearAddFields();
         }));
 
-        addEntryPanel.Widgets.Add(new MyraLabel("Add New Entry:", MyraLabel.TextStyle.H3));
+        addEntryPanel.Widgets.Add(new MyraLabel(lang.AddNewEntry, MyraLabel.TextStyle.H3));
         addEntryPanel.Widgets.Add(addFieldsRow1);
         addEntryPanel.Widgets.Add(addFieldsRow2);
         addEntryPanel.Widgets.Add(addConfirmRow);
 
         // Action buttons
         var actionRow = new HorizontalStackPanel { Spacing = 6 };
-        actionRow.Widgets.Add(new MyraButton("Add Manual Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Add from Target", () =>
+        actionRow.Widgets.Add(new MyraButton(lang.AddManualEntry, () => addEntryPanel.Visible = !addEntryPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton(lang.AddFromTarget, () =>
         {
-            GameActions.Print(Client.Game.UO.World, "Target item to add");
+            GameActions.Print(Client.Game.UO.World, lang.TargetItemToAdd);
             World.Instance.TargetManager.SetTargeting(targeted =>
             {
                 if (targeted is Entity entity && SerialHelper.IsItem(entity))
@@ -228,23 +231,23 @@ public static class AutoBuyAgentTabContent
                     BuildEntriesList();
                 }
             });
-        }) { Tooltip = "Target an item to add it to the buy list." });
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        }) { Tooltip = lang.AddFromTargetTooltip });
+        actionRow.Widgets.Add(new MyraButton(common.Import, () =>
         {
             string? json = Clipboard.GetClipboardText();
             if (json.NotNullNotEmpty() && BuySellAgent.ImportFromJson(json, AgentType.Buy))
             {
-                GameActions.Print("Imported buy list!", Constants.HUE_SUCCESS);
+                GameActions.Print(lang.ImportedBuyList, Constants.HUE_SUCCESS);
                 BuildEntriesList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import from clipboard (must have a valid export copied)." });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+            GameActions.Print(lang.ClipboardNoValidExport, Constants.HUE_ERROR);
+        }) { Tooltip = lang.ImportTooltip });
+        actionRow.Widgets.Add(new MyraButton(common.Export, () =>
         {
             BuySellAgent.GetJsonExport(AgentType.Buy)?.CopyToClipboard();
-            GameActions.Print("Exported buy list to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export your list to clipboard." });
+            GameActions.Print(lang.ExportedBuyList, Constants.HUE_SUCCESS);
+        }) { Tooltip = lang.ExportTooltip });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addEntryPanel);

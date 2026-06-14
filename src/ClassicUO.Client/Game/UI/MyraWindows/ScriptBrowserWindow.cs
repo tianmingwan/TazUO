@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -35,7 +36,7 @@ public class ScriptBrowserWindow : MyraControl
     private MyraLabel _previewLoadingLabel;
     private MyraInputBox _previewContentBox;
 
-    public ScriptBrowserWindow() : base("Public Script Browser")
+    public ScriptBrowserWindow() : base(Language.Instance.Scripting.ScriptBrowserTitle)
     {
         _cache = new GitHubContentCache(ScriptBrowser.REPO);
         CanBeSaved = true;
@@ -64,7 +65,7 @@ public class ScriptBrowserWindow : MyraControl
         grid.AddRow();                                       // Row 1: preview (auto-height)
         grid.AddColumn(new Proportion(ProportionType.Fill));
 
-        _statusLabel = new MyraLabel("Loading repository contents...", MyraLabel.TextStyle.P);
+        _statusLabel = new MyraLabel(Language.Instance.Scripting.LoadingRepositoryContents, MyraLabel.TextStyle.P);
 
         var treeContainer = new VerticalStackPanel { Spacing = 4 };
         treeContainer.Widgets.Add(_statusLabel);
@@ -81,7 +82,7 @@ public class ScriptBrowserWindow : MyraControl
         _previewPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
 
         _previewTitleLabel = new MyraLabel("", MyraLabel.TextStyle.H2);
-        _previewLoadingLabel = new MyraLabel("Loading...", MyraLabel.TextStyle.P);
+        _previewLoadingLabel = new MyraLabel(Language.Instance.Scripting.Loading, MyraLabel.TextStyle.P);
 
         _previewContentBox = new MyraInputBox
         {
@@ -93,7 +94,7 @@ public class ScriptBrowserWindow : MyraControl
 
         var previewHeader = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
         previewHeader.Widgets.Add(_previewTitleLabel);
-        previewHeader.Widgets.Add(new MyraButton("Close Preview", () => _previewPanel.Visible = false));
+        previewHeader.Widgets.Add(new MyraButton(Language.Instance.Scripting.ClosePreview, () => _previewPanel.Visible = false));
 
         _previewPanel.Widgets.Add(previewHeader);
         _previewPanel.Widgets.Add(_previewLoadingLabel);
@@ -129,7 +130,7 @@ public class ScriptBrowserWindow : MyraControl
 
         if (_isInitialLoading)
         {
-            _statusLabel.Text = "Loading repository contents...";
+            _statusLabel.Text = Language.Instance.Scripting.LoadingRepositoryContents;
             _statusLabel.TextColor = Color.White;
             _statusLabel.Visible = true;
             return;
@@ -140,7 +141,7 @@ public class ScriptBrowserWindow : MyraControl
             _statusLabel.Text = _errorMessage;
             _statusLabel.TextColor = Color.OrangeRed;
             _statusLabel.Visible = true;
-            _treePanel.Widgets.Add(new MyraButton("Retry", () =>
+            _treePanel.Widgets.Add(new MyraButton(Language.Instance.Scripting.Retry, () =>
             {
                 _errorMessage = "";
                 _directoryCache.Clear();
@@ -164,13 +165,13 @@ public class ScriptBrowserWindow : MyraControl
         if (!node.IsLoaded && !node.IsLoading)
         {
             LoadDirectoryAsync(path);
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + Language.Instance.Scripting.Loading, MyraLabel.TextStyle.P));
             return;
         }
 
         if (node.IsLoading)
         {
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + Language.Instance.Scripting.Loading, MyraLabel.TextStyle.P));
             return;
         }
 
@@ -184,7 +185,7 @@ public class ScriptBrowserWindow : MyraControl
             if (depth > 0)
                 row.Widgets.Add(new MyraLabel(Indent(depth), MyraLabel.TextStyle.P));
 
-            row.Widgets.Add(new MyraButton(isExpanded ? "[-]" : "[+]", () =>
+            row.Widgets.Add(new MyraButton(isExpanded ? Language.Instance.Scripting.Expand : Language.Instance.Scripting.Collapse, () =>
             {
                 if (!_directoryCache.ContainsKey(d.Path))
                     _directoryCache[d.Path] = new DirectoryNode { Path = d.Path };
@@ -209,9 +210,9 @@ public class ScriptBrowserWindow : MyraControl
                 row.Widgets.Add(new MyraLabel(Indent(depth + 1), MyraLabel.TextStyle.P));
 
             row.Widgets.Add(new MyraLabel(f.Name, MyraLabel.TextStyle.P));
-            row.Widgets.Add(new MyraButton("View",      () => ViewScript(f)));
-            row.Widgets.Add(new MyraButton("Download",  () => DownloadAndOpenScript(f)));
-            row.Widgets.Add(new MyraButton("Open Link", () => PlatformHelper.LaunchBrowser(f.HtmlUrl)));
+            row.Widgets.Add(new MyraButton(Language.Instance.Scripting.View,      () => ViewScript(f)));
+            row.Widgets.Add(new MyraButton(Language.Instance.Scripting.Download_,  () => DownloadAndOpenScript(f)));
+            row.Widgets.Add(new MyraButton(Language.Instance.Scripting.OpenLink, () => PlatformHelper.LaunchBrowser(f.HtmlUrl)));
             _treePanel.Widgets.Add(row);
         }
     }
@@ -259,7 +260,7 @@ public class ScriptBrowserWindow : MyraControl
                     if (string.IsNullOrEmpty(path))
                     {
                         _isInitialLoading = false;
-                        _errorMessage = $"Failed to load scripts: {ex.Message}";
+                        _errorMessage = string.Format(Language.Instance.Scripting.FailedToLoadScripts, ex.Message);
                     }
                     _rebuildPending = true;
                 });
@@ -293,7 +294,7 @@ public class ScriptBrowserWindow : MyraControl
             Console.WriteLine($"Error loading file for preview: {ex.Message}");
             _mainThreadActions.Enqueue(() =>
             {
-                _previewContentBox.Text = $"Error loading file: {ex.Message}";
+                _previewContentBox.Text = string.Format(Language.Instance.Scripting.ErrorLoadingFile, ex.Message);
                 _previewLoadingLabel.Visible = false;
                 _previewContentBox.Visible = true;
             });
@@ -319,7 +320,7 @@ public class ScriptBrowserWindow : MyraControl
                         sanitizedFileName == "." ||
                         sanitizedFileName == "..")
                     {
-                        GameActions.Print(World.Instance, $"Invalid script filename: {file.Name}. Filename contains invalid characters or path separators.", 32);
+                        GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.InvalidScriptFilenameNoChars, file.Name), 32);
                         Console.WriteLine($"Security: Rejected invalid filename: {file.Name}");
                         return;
                     }
@@ -327,7 +328,7 @@ public class ScriptBrowserWindow : MyraControl
                     char[] invalidChars = Path.GetInvalidFileNameChars();
                     if (sanitizedFileName.IndexOfAny(invalidChars) >= 0)
                     {
-                        GameActions.Print(World.Instance, $"Invalid script filename: {file.Name}. Filename contains invalid characters.", 32);
+                        GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.InvalidScriptFilename, file.Name), 32);
                         Console.WriteLine($"Security: Rejected filename with invalid characters: {file.Name}");
                         return;
                     }
@@ -342,7 +343,7 @@ public class ScriptBrowserWindow : MyraControl
                     if (!fullFilePath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                         !fullFilePath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        GameActions.Print(World.Instance, $"Security error: Script path must be within the scripts directory.", 32);
+                        GameActions.Print(World.Instance, Language.Instance.Scripting.SecurityErrorScriptPath, 32);
                         Console.WriteLine($"Security: Path traversal attempt blocked. File: {file.Name}, Resolved: {fullFilePath}");
                         return;
                     }
@@ -365,7 +366,7 @@ public class ScriptBrowserWindow : MyraControl
                             if (!fullFinalPath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                                 !fullFinalPath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
                             {
-                                GameActions.Print(World.Instance, $"Security error: Generated path is invalid.", 32);
+                                GameActions.Print(World.Instance, Language.Instance.Scripting.GeneratedPathInvalid, 32);
                                 return;
                             }
 
@@ -375,7 +376,7 @@ public class ScriptBrowserWindow : MyraControl
 
                         if (counter >= 1000)
                         {
-                            GameActions.Print(World.Instance, $"Too many duplicate files. Please clean up your scripts directory.", 32);
+                            GameActions.Print(World.Instance, Language.Instance.Scripting.TooManyDuplicateFiles, 32);
                             return;
                         }
                     }
@@ -385,14 +386,14 @@ public class ScriptBrowserWindow : MyraControl
                     var f = new ScriptFile(World.Instance, LegionScripting.LegionScripting.ScriptPath, finalFileName);
                     new ScriptEditorWindow(f);
 
-                    GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
+                    GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.DownloadedScript, finalFileName));
 
                     ScriptManagerWindow.Instance?.Refresh();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error creating script file: {ex.Message}");
-                    GameActions.Print(World.Instance, $"Error saving script: {file.Name} - {ex.Message}");
+                    GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorSavingScript, file.Name, ex.Message));
                 }
             });
         }
@@ -401,7 +402,7 @@ public class ScriptBrowserWindow : MyraControl
             Console.WriteLine($"Error loading file: {ex.Message}");
             _mainThreadActions.Enqueue(() =>
             {
-                GameActions.Print(World.Instance, $"Error loading script: {file.Name}");
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorLoadingScriptBrowser, file.Name));
             });
         }
     });

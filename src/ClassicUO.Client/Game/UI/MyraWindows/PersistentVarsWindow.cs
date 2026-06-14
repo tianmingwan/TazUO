@@ -23,7 +23,7 @@ public class PersistentVarsWindow : MyraControl
     private readonly HorizontalStackPanel _scopeButtonRow = new() { Spacing = 4 };
     private readonly HorizontalStackPanel _scopeDescPanel = new() { Spacing = 4 };
 
-    public PersistentVarsWindow() : base("Persistent Variables Manager")
+    public PersistentVarsWindow() : base(Language.Instance.Scripting.PersistentVarsTitle)
     {
         CanBeSaved = true;
         Build();
@@ -49,7 +49,7 @@ public class PersistentVarsWindow : MyraControl
 
         // Scope selector
         var scopeRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
-        scopeRow.Widgets.Add(new MyraLabel("Scope:", MyraLabel.TextStyle.P));
+        scopeRow.Widgets.Add(new MyraLabel(Language.Instance.Scripting.Scope, MyraLabel.TextStyle.P));
         BuildScopeButtons();
         scopeRow.Widgets.Add(_scopeButtonRow);
         BuildScopeDesc();
@@ -72,10 +72,10 @@ public class PersistentVarsWindow : MyraControl
 
         (LegionAPI.PersistentVar scope, string label)[] scopes =
         [
-            (LegionAPI.PersistentVar.Char,    "Character"),
-            (LegionAPI.PersistentVar.Account, "Account"),
-            (LegionAPI.PersistentVar.Server,  "Server"),
-            (LegionAPI.PersistentVar.Global,  "Global"),
+            (LegionAPI.PersistentVar.Char,    Language.Instance.Scripting.ScopeCharacter),
+            (LegionAPI.PersistentVar.Account, Language.Instance.Scripting.ScopeAccount),
+            (LegionAPI.PersistentVar.Server,  Language.Instance.Scripting.ScopeServer),
+            (LegionAPI.PersistentVar.Global,  Language.Instance.Scripting.ScopeGlobal),
         ];
 
         foreach ((LegionAPI.PersistentVar scope, string label) in scopes)
@@ -108,7 +108,7 @@ public class PersistentVarsWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new MyraInputBox { Text = _filterText, HintText = "Filter variables...", Width = 200 };
+        var filterBox = new MyraInputBox { Text = _filterText, HintText = Language.Instance.Scripting.FilterVariables, Width = 200 };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -116,8 +116,8 @@ public class PersistentVarsWindow : MyraControl
         };
         toolbar.Widgets.Add(filterBox);
 
-        toolbar.Widgets.Add(new MyraButton("Add New Variable", ShowAddDialog));
-        toolbar.Widgets.Add(new MyraButton("Refresh", () =>
+        toolbar.Widgets.Add(new MyraButton(Language.Instance.Scripting.AddNewVariable, ShowAddDialog));
+        toolbar.Widgets.Add(new MyraButton(Language.Instance.Scripting.Refresh_, () =>
         {
             PersistentVars.Load();
             BuildVarsGrid();
@@ -143,15 +143,15 @@ public class PersistentVarsWindow : MyraControl
 
         if (variables.Count == 0)
         {
-            _varsPanel.Widgets.Add(new MyraLabel("No variables found.", MyraLabel.TextStyle.P));
+            _varsPanel.Widgets.Add(new MyraLabel(Language.Instance.Scripting.NoVariablesFound, MyraLabel.TextStyle.P));
             return;
         }
 
         var grid = new MyraGrid();
         grid.SetupWithHeaders(
-            GridColumnInfo.Auto("Key"),
-            GridColumnInfo.Fill("Value"),
-            GridColumnInfo.Auto("Actions")
+            GridColumnInfo.Auto(Language.Instance.Scripting.Key_),
+            GridColumnInfo.Fill(Language.Instance.Scripting.Value_),
+            GridColumnInfo.Auto(Language.Instance.Scripting.Actions_)
         );
 
         int dataRow = 1;
@@ -169,7 +169,7 @@ public class PersistentVarsWindow : MyraControl
                 grid.AddWidget(editBox, dataRow, 1);
 
                 var actionRow = new HorizontalStackPanel { Spacing = 2 };
-                actionRow.Widgets.Add(new MyraButton("Save", () =>
+                actionRow.Widgets.Add(new MyraButton(Language.Instance.Scripting.Submit, () =>
                 {
                     string savedKey = key;
                     string savedValue = _editingValue;
@@ -178,7 +178,7 @@ public class PersistentVarsWindow : MyraControl
                     PersistentVars.SaveVar(_selectedScope, savedKey, savedValue, () =>
                         MainThreadQueue.InvokeOnMainThread(BuildVarsGrid));
                 }));
-                actionRow.Widgets.Add(new MyraButton("Cancel", () =>
+                actionRow.Widgets.Add(new MyraButton(Language.Instance.Scripting.Cancel_, () =>
                 {
                     _editingKey   = null;
                     _editingValue = "";
@@ -191,13 +191,13 @@ public class PersistentVarsWindow : MyraControl
                 grid.AddWidget(new MyraLabel(value, MyraLabel.TextStyle.P) { Tooltip = value }, dataRow, 1);
 
                 var actionRow = new HorizontalStackPanel { Spacing = 2 };
-                actionRow.Widgets.Add(new MyraButton("Edit", () =>
+                actionRow.Widgets.Add(new MyraButton(Language.Instance.Scripting.Edit_, () =>
                 {
                     _editingKey   = key;
                     _editingValue = value;
                     BuildVarsGrid();
                 }));
-                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(Language.Instance.Scripting.Delete_, () =>
                     ShowDeleteDialog(key))));
                 grid.AddWidget(actionRow, dataRow, 2);
             }
@@ -210,17 +210,17 @@ public class PersistentVarsWindow : MyraControl
 
     private void ShowAddDialog()
     {
-        var keyBox   = new MyraInputBox { HintText = "Key name...", Width = 300 };
-        var valueBox = new MyraInputBox { HintText = "Value...",    Width = 300 };
+        var keyBox   = new MyraInputBox { HintText = Language.Instance.Scripting.KeyNameHint, Width = 300 };
+        var valueBox = new MyraInputBox { HintText = Language.Instance.Scripting.ValueHint,    Width = 300 };
 
         var form = new VerticalStackPanel { Spacing = 4 };
-        form.Widgets.Add(new MyraLabel($"Add new variable to {_selectedScope} scope:", MyraLabel.TextStyle.P));
-        form.Widgets.Add(new MyraLabel("Key:",   MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel(string.Format(Language.Instance.Scripting.AddVariableToScope, _selectedScope), MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel(Language.Instance.Scripting.KeyLabel,   MyraLabel.TextStyle.P));
         form.Widgets.Add(keyBox);
-        form.Widgets.Add(new MyraLabel("Value:", MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel(Language.Instance.Scripting.ValueLabel, MyraLabel.TextStyle.P));
         form.Widgets.Add(valueBox);
 
-        new MyraDialog("Add Variable", form, ok =>
+        new MyraDialog(Language.Instance.Scripting.AddVariableTitle, form, ok =>
         {
             if (!ok || string.IsNullOrWhiteSpace(keyBox.Text)) return;
             PersistentVars.SaveVar(_selectedScope, keyBox.Text.Trim(), valueBox.Text ?? "", () =>
@@ -229,8 +229,8 @@ public class PersistentVarsWindow : MyraControl
     }
 
     private void ShowDeleteDialog(string key) =>
-        new MyraDialog("Confirm Delete",
-            new MyraLabel($"Delete variable '{key}'?", MyraLabel.TextStyle.P),
+        new MyraDialog(Language.Instance.Scripting.ConfirmDelete_,
+            new MyraLabel(string.Format(Language.Instance.Scripting.DeleteVariableConfirm, key), MyraLabel.TextStyle.P),
             ok =>
             {
                 if (!ok) return;
@@ -244,7 +244,7 @@ public class PersistentVarsWindow : MyraControl
         LegionAPI.PersistentVar.Char    => $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.CharacterName}",
         LegionAPI.PersistentVar.Account => $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.Username}",
         LegionAPI.PersistentVar.Server  => ProfileManager.CurrentProfile.ServerName,
-        LegionAPI.PersistentVar.Global  => "All servers and characters",
+        LegionAPI.PersistentVar.Global  => Language.Instance.Scripting.AllServersAndCharacters,
         _                               => ""
     };
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -18,7 +19,7 @@ public class RunningScriptsWindow : MyraControl
         Orientation = Orientation.Vertical,
     };
 
-    public RunningScriptsWindow() : base("Running Scripts")
+    public RunningScriptsWindow() : base(Language.Instance.Scripting.RunningScriptsTitle)
     {
         const int minWidth = 120;
         const int minHeight = 110;
@@ -77,7 +78,7 @@ public class RunningScriptsWindow : MyraControl
         if (scripts.Count == 0)
         {
             _scriptList.Widgets.Add(
-                new MyraLabel("No scripts currently running", MyraLabel.TextStyle.P) { Margin = new Thickness(4) }
+                new MyraLabel(Language.Instance.Scripting.NoScriptsCurrentlyRunning, MyraLabel.TextStyle.P) { Margin = new Thickness(4) }
             );
             return;
         }
@@ -88,11 +89,11 @@ public class RunningScriptsWindow : MyraControl
 
             var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
-            row.Widgets.Add(new MyraButton("Stop", () => LegionScripting.LegionScripting.StopScript(script)));
+            row.Widgets.Add(new MyraButton(Language.Instance.Scripting.Stop, () => LegionScripting.LegionScripting.StopScript(script)));
 
-            row.Widgets.Add(new MyraLabel(script.FileName ?? "Unknown", MyraLabel.TextStyle.P)
+            row.Widgets.Add(new MyraLabel(script.FileName ?? Language.Instance.Scripting.Unknown, MyraLabel.TextStyle.P)
             {
-                Tooltip = $"Path: {script.FullPath ?? "N/A"}"
+                Tooltip = string.Format(Language.Instance.Scripting.PathTooltip, script.FullPath ?? "N/A")
             });
 
             _scriptList.Widgets.Add(row);

@@ -140,7 +140,7 @@ namespace ClassicUO.Game.Managers
         {
             if (args.Length < 3)
             {
-                GameActions.Print(World.Instance, "Usage: -dressagent <dress|undress> \"<config name>\"");
+                GameActions.Print(World.Instance, Language.Instance.Assistant.Agents.Dress.Usage);
                 return;
             }
 
@@ -150,7 +150,7 @@ namespace ClassicUO.Game.Managers
             DressConfig config = CurrentPlayerConfigs.FirstOrDefault(c => c.Name.Equals(configName, StringComparison.OrdinalIgnoreCase));
             if (config == null)
             {
-                GameActions.Print(World.Instance, $"Dress config '{configName}' not found");
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Dress.ConfigNotFound, configName));
                 return;
             }
 
@@ -158,14 +158,14 @@ namespace ClassicUO.Game.Managers
             {
                 case "dress":
                     DressFromConfig(config);
-                    GameActions.Print(World.Instance, $"Dressing from config: {configName}");
+                    GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Dress.DressingFromConfig, configName));
                     break;
                 case "undress":
                     UndressFromConfig(config);
-                    GameActions.Print(World.Instance, $"Undressing from config: {configName}");
+                    GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Dress.UndressingFromConfig, configName));
                     break;
                 default:
-                    GameActions.Print(World.Instance, "Usage: -dressagent <dress|undress> \"<config name>\"");
+                GameActions.Print(World.Instance, Language.Instance.Assistant.Agents.Dress.Usage);
                     break;
             }
         }

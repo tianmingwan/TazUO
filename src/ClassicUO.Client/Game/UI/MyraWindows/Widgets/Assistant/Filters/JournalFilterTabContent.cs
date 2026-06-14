@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
@@ -11,14 +12,14 @@ public static class JournalFilterTabContent
 {
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.JournalFilter;
+        var ui = Language.Instance.UiCommons;
         var root = new VerticalStackPanel { Spacing = 6 };
 
-        root.Widgets.Add(new MyraLabel(
-            "Journal Filter hides specific messages from the journal. Messages that match exactly will be filtered out.",
-            MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(lang.HeaderDescription, MyraLabel.TextStyle.H3));
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newFilterBox = new MyraInputBox { HintText = "Filter text (exact match)", Width = 300 };
+        var newFilterBox = new MyraInputBox { HintText = lang.FilterTextHint, Width = 300 };
 
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
 
@@ -29,12 +30,12 @@ public static class JournalFilterTabContent
 
             if (filters.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No filters configured.", MyraLabel.TextStyle.H3));
+                filtersPanel.Widgets.Add(new MyraLabel(lang.NoFilters, MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
-            grid.SetupWithHeaders(GridColumnInfo.Fill("Filter Text"), GridColumnInfo.Auto("Actions"));
+            grid.SetupWithHeaders(GridColumnInfo.Fill(lang.ColFilterText), GridColumnInfo.Auto(lang.ColActions));
 
             int dataRow = 1;
             for (int i = filters.Count - 1; i >= 0; i--)
@@ -57,12 +58,12 @@ public static class JournalFilterTabContent
                 };
                 grid.AddWidget(filterBox, dataRow, 0);
 
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton(ui.Delete, () =>
                 {
                     JournalFilterManager.Instance.RemoveFilter(current[0]);
                     JournalFilterManager.Instance.Save(false);
                     BuildFilterList();
-                }) { Tooltip = "Delete this filter" }), dataRow, 1);
+                }) { Tooltip = lang.DeleteTooltip }), dataRow, 1);
 
                 dataRow++;
             }
@@ -71,7 +72,7 @@ public static class JournalFilterTabContent
         }
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-        addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(ui.Add, () =>
         {
             string text = newFilterBox.Text ?? "";
             if (!string.IsNullOrWhiteSpace(text))
@@ -83,24 +84,24 @@ public static class JournalFilterTabContent
                 BuildFilterList();
             }
         }));
-        addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(ui.Cancel, () =>
         {
             addFilterPanel.Visible = false;
             newFilterBox.Text = "";
         }));
 
         var addFieldRow = new HorizontalStackPanel { Spacing = 4 };
-        addFieldRow.Widgets.Add(new MyraLabel("Filter Text:", MyraLabel.TextStyle.P)
-            { Tooltip = "Must match the journal entry exactly. Partial matches not supported." });
+        addFieldRow.Widgets.Add(new MyraLabel(lang.FilterTextLabel, MyraLabel.TextStyle.P)
+            { Tooltip = lang.FilterTextTooltip });
         addFieldRow.Widgets.Add(newFilterBox);
 
-        addFilterPanel.Widgets.Add(new MyraLabel("Add New Filter:", MyraLabel.TextStyle.H3));
+        addFilterPanel.Widgets.Add(new MyraLabel(lang.AddNewFilterLabel, MyraLabel.TextStyle.H3));
         addFilterPanel.Widgets.Add(addFieldRow);
         addFilterPanel.Widgets.Add(addConfirmRow);
 
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
-        actionRow.Widgets.Add(new MyraButton("Add Filter Entry", () => addFilterPanel.Visible = !addFilterPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        actionRow.Widgets.Add(new MyraButton(lang.AddFilterEntry, () => addFilterPanel.Visible = !addFilterPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton(ui.Import, () =>
         {
             string? json = Clipboard.GetClipboardText();
             if (json.NotNullNotEmpty() && JournalFilterManager.Instance.ImportFromJson(json))
@@ -108,17 +109,17 @@ public static class JournalFilterTabContent
                 BuildFilterList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
+            GameActions.Print(lang.ClipboardInvalid, Constants.HUE_ERROR);
         }) { Tooltip = "Import from your clipboard, must have a valid export copied." });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+        actionRow.Widgets.Add(new MyraButton(ui.Export, () =>
         {
             JournalFilterManager.Instance.GetJsonExport()?.CopyToClipboard();
-            GameActions.Print("Exported journal filters to your clipboard!", Constants.HUE_SUCCESS);
+            GameActions.Print(lang.Exported, Constants.HUE_SUCCESS);
         }) { Tooltip = "Export your filters to your clipboard." });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addFilterPanel);
-        root.Widgets.Add(new MyraLabel("Current Journal Filters:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(lang.CurrentJournalFilters, MyraLabel.TextStyle.H3));
         BuildFilterList();
         root.Widgets.Add(new ScrollViewer { Height = 250, Content = filtersPanel });
 

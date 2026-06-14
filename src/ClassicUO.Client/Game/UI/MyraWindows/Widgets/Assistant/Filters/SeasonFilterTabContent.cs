@@ -1,4 +1,5 @@
 #nullable enable
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using Myra.Graphics2D.UI;
 
@@ -6,7 +7,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
 public static class SeasonFilterTabContent
 {
-    private static readonly string[] SeasonNames = { "Spring", "Summer", "Fall", "Winter", "Desolation" };
+    private static readonly string[] SeasonNames;
     private static readonly Season[] AllSeasons =
     {
         Season.Spring,
@@ -21,33 +22,35 @@ public static class SeasonFilterTabContent
 
     static SeasonFilterTabContent()
     {
+        var lang = Language.Instance.Assistant.SeasonFilter;
+        SeasonNames = new[] { lang.Spring, lang.Summer, lang.Fall, lang.Winter, lang.Desolation };
         DisplayOptions = new string[AllSeasons.Length + 1];
-        DisplayOptions[0] = "None";
+        DisplayOptions[0] = lang.None;
         for (int j = 0; j < SeasonNames.Length; j++)
             DisplayOptions[j + 1] = SeasonNames[j];
     }
 
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.SeasonFilter;
+        var ui = Language.Instance.UiCommons;
         var root = new VerticalStackPanel { Spacing = 6 };
 
-        root.Widgets.Add(new MyraLabel(
-            "Override seasons sent by the server. For example, if the server sends Winter, you can display Fall instead.",
-            MyraLabel.TextStyle.H3) { MaxWidth = 500 });
+        root.Widgets.Add(new MyraLabel(lang.HeaderDescription, MyraLabel.TextStyle.H3) { MaxWidth = 500 });
 
         // Collect BuildCycleBtn delegates so Clear can refresh all wrappers
         var rebuildActions = new System.Collections.Generic.List<System.Action>();
 
-        root.Widgets.Add(new MyraButton("Clear All Filters", () =>
+        root.Widgets.Add(new MyraButton(ui.ClearAllFilters, () =>
         {
             SeasonFilter.Instance.Clear();
             foreach (System.Action rebuild in rebuildActions) rebuild();
-        }) { Tooltip = "Remove all season filters and display seasons as sent by the server" });
+        }) { Tooltip = lang.ClearAllTooltip });
 
-        root.Widgets.Add(new MyraLabel("Season Filters:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(lang.SeasonFiltersLabel, MyraLabel.TextStyle.H3));
 
         var grid = new MyraGrid();
-        grid.SetupWithHeaders(GridColumnInfo.Auto("When Server Sends"), GridColumnInfo.Auto("Show As"));
+        grid.SetupWithHeaders(GridColumnInfo.Auto(lang.ColWhenServerSends), GridColumnInfo.Auto(lang.ColShowAs));
 
         for (int i = 0; i < AllSeasons.Length; i++)
         {
@@ -62,7 +65,7 @@ public static class SeasonFilterTabContent
             {
                 cycleWrapper.Widgets.Clear();
 
-                string currentLabel = "None";
+                string currentLabel = lang.None;
                 int currentIdx = 0;
                 if (SeasonFilter.Instance.Filters.TryGetValue(incoming, out Season replacement))
                 {
@@ -85,7 +88,7 @@ public static class SeasonFilterTabContent
                     else
                         SeasonFilter.Instance.SetFilter(incoming, AllSeasons[nextIdx - 1]);
                     BuildCycleBtn();
-                }) { Tooltip = $"Click to cycle season override for {incomingName}" });
+                }) { Tooltip = string.Format(lang.CycleTooltip, incomingName) });
             }
 
             rebuildActions.Add(BuildCycleBtn);
@@ -94,9 +97,7 @@ public static class SeasonFilterTabContent
         }
 
         root.Widgets.Add(grid);
-        root.Widgets.Add(new MyraLabel(
-            "Click the button to cycle through options. 'None' disables the filter.",
-            MyraLabel.TextStyle.P));
+        root.Widgets.Add(new MyraLabel(lang.FooterText, MyraLabel.TextStyle.P));
 
         return root;
     }

@@ -96,22 +96,22 @@ namespace ClassicUO.Game.Managers
             OrganizerConfig config = FindConfig(nameOrIndex);
             if (config == null)
             {
-                GameActions.Print(World.Instance, $"Organizer '{nameOrIndex}' not found.", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.OrganizerNotFound, nameOrIndex), Constants.HUE_ERROR);
                 return;
             }
 
-            GameActions.Print(World.Instance, $"Target the source container for organizer '{config.Name}'.");
+            GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.TargetSourceContainer, config.Name));
             World.Instance.TargetManager.SetTargeting((o) =>
             {
                 if (o is Item item && item.ItemData.IsContainer)
                 {
                     config.SourceContSerial = item.Serial;
                     Save();
-                    GameActions.Print(World.Instance, $"Source container for organizer '{config.Name}' set.", Constants.HUE_SUCCESS);
+                    GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.SourceContainerSetPrint, config.Name), Constants.HUE_SUCCESS);
                 }
                 else
                 {
-                    GameActions.Print(World.Instance, "That doesn't appear to be a valid container.", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, Language.Instance.Assistant.Agents.Organizer.NotAValidContainer, Constants.HUE_ERROR);
                 }
             });
         }
@@ -187,17 +187,17 @@ namespace ClassicUO.Game.Managers
         {
             if (OrganizerConfigs.Count == 0)
             {
-                GameActions.Print(World.Instance, "No organizers configured.");
+                GameActions.Print(World.Instance, Language.Instance.Assistant.Agents.Organizer.NoOrganizersConfigured);
                 return;
             }
 
-            GameActions.Print(World.Instance, $"Available organizers ({OrganizerConfigs.Count}):");
+            GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.AvailableOrganizers, OrganizerConfigs.Count));
             for (int i = 0; i < OrganizerConfigs.Count; i++)
             {
                 OrganizerConfig config = OrganizerConfigs[i];
-                string status = config.Enabled ? "enabled" : "disabled";
+                string status = config.Enabled ? Language.Instance.Assistant.Agents.Organizer.EnabledStatus : Language.Instance.Assistant.Agents.Organizer.DisabledStatus;
                 int itemCount = config.ItemConfigs.Count(ic => ic.Enabled);
-                GameActions.Print(World.Instance, $"  {i}: '{config.Name}' ({status}, {itemCount} item types, destination: {config.DestContSerial:X})");
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.OrganizerListItem, i, config.Name, status, itemCount, config.DestContSerial));
             }
         }
 
@@ -206,7 +206,7 @@ namespace ClassicUO.Game.Managers
             Item backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
-                GameActions.Print(World.Instance, "Cannot find player backpack.");
+                GameActions.Print(World.Instance, Language.Instance.Assistant.Agents.Organizer.CannotFindBackpack);
                 return;
             }
 
@@ -221,7 +221,7 @@ namespace ClassicUO.Game.Managers
 
                 if (sourceCont == null)
                 {
-                    GameActions.Print(World.Instance, $"Cannot find source container for organizer '{config.Name}'.");
+                    GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.CannotFindSourceContainer, config.Name));
                     continue;
                 }
 
@@ -231,7 +231,7 @@ namespace ClassicUO.Game.Managers
 
                 if (destCont == null)
                 {
-                    GameActions.Print($"Cannot find destination container for organizer '{config.Name}'. Using backpack as default.");
+                    GameActions.Print(string.Format(Language.Instance.Assistant.Agents.Organizer.CannotFindDestContainerUsingBackpack, config.Name));
                     destCont = backpack;
                 }
 
@@ -240,7 +240,7 @@ namespace ClassicUO.Game.Managers
 
             if (totalOrganized == 0)
             {
-                GameActions.Print(World.Instance, "No items were organized.", 33);
+                GameActions.Print(World.Instance, Language.Instance.Assistant.Agents.Organizer.NoItemsWereOrganized, 33);
             }
         }
 
@@ -249,7 +249,7 @@ namespace ClassicUO.Game.Managers
             OrganizerConfig config = OrganizerConfigs.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (config == null)
             {
-                GameActions.Print(World.Instance, $"Organizer '{name}' not found.", 33);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.OrganizerNotFound, name), 33);
                 return;
             }
 
@@ -260,7 +260,7 @@ namespace ClassicUO.Game.Managers
         {
             if (index < 0 || index >= OrganizerConfigs.Count)
             {
-                GameActions.Print(World.Instance, $"Organizer index {index} is out of range. Available organizers: 0-{OrganizerConfigs.Count - 1}", 33);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.OrganizerIndexOutOfRange, index, OrganizerConfigs.Count - 1), 33);
                 return;
             }
 
@@ -307,7 +307,7 @@ namespace ClassicUO.Game.Managers
                 Item thisDestCont = World.Instance.Items.Get(destinationSerial);
                 if (thisDestCont == null)
                 {
-                    GameActions.Print($"Cannot find destination container {destinationSerial:X}. Using backpack as default.");
+                    GameActions.Print(string.Format(Language.Instance.Assistant.Agents.Organizer.CannotFindDestContainerSerial, destinationSerial));
                     thisDestCont = backpack;
                     if (thisDestCont == null) continue;
                 }
@@ -369,7 +369,7 @@ namespace ClassicUO.Game.Managers
 
             if (totalItemsMoved > 0)
             {
-                GameActions.Print($"Organizing {totalItemsMoved} items from '{config.Name}'...", Constants.HUE_SUCCESS);
+                GameActions.Print(string.Format(Language.Instance.Assistant.Agents.Organizer.OrganizingItems, totalItemsMoved, config.Name), Constants.HUE_SUCCESS);
             }
 
             return totalItemsMoved;
@@ -379,14 +379,14 @@ namespace ClassicUO.Game.Managers
         {
             if (!config.Enabled)
             {
-                GameActions.Print(World.Instance, $"Organizer '{config.Name}' is disabled.", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.OrganizerDisabled, config.Name), Constants.HUE_ERROR);
                 return;
             }
 
             Item backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
-                GameActions.Print(World.Instance, "Cannot find player backpack.");
+                GameActions.Print(World.Instance, Language.Instance.Assistant.Agents.Organizer.CannotFindBackpack);
                 return;
             }
 
@@ -398,7 +398,7 @@ namespace ClassicUO.Game.Managers
 
             if (sourceCont == null)
             {
-                GameActions.Print($"Cannot find source container for organizer '{config.Name}'.");
+                GameActions.Print(string.Format(Language.Instance.Assistant.Agents.Organizer.CannotFindSourceContainer, config.Name));
                 return;
             }
 
@@ -409,14 +409,14 @@ namespace ClassicUO.Game.Managers
 
             if (destCont == null)
             {
-                GameActions.Print(World.Instance, $"Cannot find destination container for organizer '{config.Name}' (Serial: {config.DestContSerial:X})", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.CannotFindDestContainerWithSerial, config.Name, config.DestContSerial), Constants.HUE_ERROR);
                 return;
             }
 
             int organized = OrganizeItems(sourceCont, destCont, config);
             if (organized == 0)
             {
-                GameActions.Print(World.Instance, $"No items were organized by '{config.Name}'.", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Assistant.Agents.Organizer.NoItemsOrganizedBy, config.Name), Constants.HUE_ERROR);
             }
         }
 
@@ -447,7 +447,7 @@ namespace ClassicUO.Game.Managers
                     importedConfig.Name = GetUniqueName(importedConfig.Name);
                     importedConfig.Enabled = false;
                     OrganizerConfigs.Add(importedConfig);
-                    GameActions.Print($"Imported organizer '{importedConfig.Name}' with {importedConfig.ItemConfigs.Count} items!", Constants.HUE_SUCCESS);
+                    GameActions.Print(string.Format(Language.Instance.Assistant.Agents.Organizer.ImportedOrganizer, importedConfig.Name, importedConfig.ItemConfigs.Count), Constants.HUE_SUCCESS);
                     return true;
                 }
             }

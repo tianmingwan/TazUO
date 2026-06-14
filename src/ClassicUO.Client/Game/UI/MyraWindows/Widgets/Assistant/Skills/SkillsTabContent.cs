@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
@@ -21,6 +22,8 @@ public class SkillsTabContent : VerticalStackPanel
 
     public SkillsTabContent()
     {
+        var lang = Language.Instance.Assistant.Skills;
+
         Skill[]? skills = World.Instance?.Player?.Skills;
         if (skills == null)
             return;
@@ -68,8 +71,8 @@ public class SkillsTabContent : VerticalStackPanel
             {
                 int capturedIdx = skill.Index;
                 grid.AddWidget(
-                    new MyraButton("Use", () => GameActions.UseSkill(capturedIdx))
-                        { Tooltip = $"Use {skill.Name}" },
+                    new MyraButton(lang.ColUse, () => GameActions.UseSkill(capturedIdx))
+                        { Tooltip = string.Format(lang.UseSkillTooltip, skill.Name) },
                     row, 0);
             }
 
@@ -78,7 +81,7 @@ public class SkillsTabContent : VerticalStackPanel
             {
                 name.TouchDoubleClick += (_, _) => UIManager.Add(new SkillButtonGump(World.Instance, skill,
                     Input.Mouse.Position.X, Input.Mouse.Position.Y));
-                name.Tooltip = $"Double click to create a skill button for {skill.Name}";
+                name.Tooltip = string.Format(lang.DoubleClickSkillTooltip, skill.Name);
             }
             grid.AddWidget(name, row, 1);
             grid.AddWidget(new MyraLabel(skill.Value.ToString("F1"), MyraLabel.TextStyle.P), row, 2);
@@ -106,7 +109,7 @@ public class SkillsTabContent : VerticalStackPanel
                     AsyncNetClient.Socket.Send_SkillsRequest(player.Serial);
                     BuildLockBtn();
                 });
-                btn.Tooltip = $"Lock: {skill.Lock}. Click to cycle.";
+                btn.Tooltip = string.Format(lang.LockTooltip, skill.Lock);
                 lockWrapper.Widgets.Add(MyraStyle.ApplySkillButtonStyle(btn, skill.Lock));
             }
             BuildLockBtn();
@@ -154,7 +157,7 @@ public class SkillsTabContent : VerticalStackPanel
                     return sortAscending ? cmp : -cmp;
                 });
 
-                var groupHeader = new MyraLabel($"── {group.Name} ({groupTotal:F1}) ──", MyraLabel.TextStyle.H3);
+                var groupHeader = new MyraLabel(string.Format("\u2500\u2500 {0} ({1:F1}) \u2500\u2500", group.Name, groupTotal), MyraLabel.TextStyle.H3);
                 mainGrid.AddWidget(groupHeader, dataRow, 0);
                 Grid.SetColumnSpan(groupHeader, 7);
                 dataRow++;
@@ -177,11 +180,11 @@ public class SkillsTabContent : VerticalStackPanel
             grid.AddColumn(null, 5);
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Use", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel(lang.ColUse, MyraLabel.TextStyle.TableHeader), 0, 0);
 
             void AddSortHeader(string name, int col, int gridCol)
             {
-                string indicator = sortColIndex == col ? (sortAscending ? " ↑" : " ↓") : "";
+                string indicator = sortColIndex == col ? (sortAscending ? " \u2191" : " \u2193") : "";
                 grid.AddWidget(new MyraButton(name + indicator, () =>
                 {
                     if (sortColIndex == col) sortAscending = !sortAscending;
@@ -191,12 +194,12 @@ public class SkillsTabContent : VerticalStackPanel
                 }), 0, gridCol);
             }
 
-            AddSortHeader("Name",  1, 1);
-            AddSortHeader("Value", 2, 2);
-            AddSortHeader("Base",  3, 3);
-            AddSortHeader("Cap",   4, 4);
-            AddSortHeader("+/-",   5, 5);
-            AddSortHeader("Lock",  6, 6);
+            AddSortHeader(lang.ColName,  1, 1);
+            AddSortHeader(lang.ColValue, 2, 2);
+            AddSortHeader(lang.ColBase,  3, 3);
+            AddSortHeader(lang.ColCap,   4, 4);
+            AddSortHeader(lang.ColDelta,   5, 5);
+            AddSortHeader(lang.ColLock,  6, 6);
 
             if (showGroups)
                 BuildGroupedRows(grid);
@@ -207,10 +210,9 @@ public class SkillsTabContent : VerticalStackPanel
             gridPanel.Widgets.Add(grid);
         }
 
-        // ── Toolbar ─────────────────────────────────────────────────────────
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        toolbar.Widgets.Add(new MyraButton("All Up", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.AllUp, () =>
         {
             for (int i = 0; i < skills.Length; i++)
                 if(skills[i].Lock != Lock.Up)
@@ -218,7 +220,7 @@ public class SkillsTabContent : VerticalStackPanel
             AsyncNetClient.Socket.Send_SkillsRequest(player.Serial);
         }));
 
-        toolbar.Widgets.Add(new MyraButton("All Down", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.AllDown, () =>
         {
             for (int i = 0; i < skills.Length; i++)
                 if(skills[i].Lock != Lock.Down)
@@ -226,7 +228,7 @@ public class SkillsTabContent : VerticalStackPanel
             AsyncNetClient.Socket.Send_SkillsRequest(player.Serial);
         }));
 
-        toolbar.Widgets.Add(new MyraButton("All Lock", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.AllLock, () =>
         {
             for (int i = 0; i < skills.Length; i++)
                 if(skills[i].Lock != Lock.Locked)
@@ -236,14 +238,14 @@ public class SkillsTabContent : VerticalStackPanel
 
         toolbar.Widgets.Add(new MyraLabel("|", MyraLabel.TextStyle.P));
 
-        toolbar.Widgets.Add(new MyraButton("Reset +/-", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.ResetDelta, () =>
         {
             for (int i = 0; i < skills.Length; i++)
                 if (skills[i] != null) skills[i].BaseAtLogin = skills[i].Base;
             BuildGrid();
-        }) { Tooltip = "Reset the +/- column baseline to current values" });
+        }) { Tooltip = lang.ResetDeltaTooltip });
 
-        toolbar.Widgets.Add(new MyraButton("Copy All", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.CopyAll, () =>
         {
             var sb = new StringBuilder();
             sb.AppendLine("Name\tValue\tBase\tCap\t+/-\tLock");
@@ -264,8 +266,8 @@ public class SkillsTabContent : VerticalStackPanel
                 sb.AppendLine($"{skill.Name}\t{skill.Value:F1}\t{skill.Base:F1}\t{skill.Cap:F1}\t{d:F1}\t{lockStr}");
             }
             sb.ToString().CopyToClipboard();
-            GameActions.Print("Skills copied to clipboard.", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Copy all skills to clipboard as tab-separated text" });
+            GameActions.Print(lang.SkillsCopiedToClipboard, Constants.HUE_SUCCESS);
+        }) { Tooltip = lang.CopyAllTooltip });
 
         toolbar.Widgets.Add(new MyraLabel("|", MyraLabel.TextStyle.P));
 
@@ -273,7 +275,7 @@ public class SkillsTabContent : VerticalStackPanel
         {
             showGroups = b;
             BuildGrid();
-        }, "Show Groups"));
+        }, lang.ShowGroups));
 
         toolbar.Widgets.Add(new MyraLabel("|", MyraLabel.TextStyle.P));
 
@@ -286,7 +288,7 @@ public class SkillsTabContent : VerticalStackPanel
         float baseSum = 0f, capSum = 0f;
         for (int i = 0; i < skills.Length; i++)
             if (skills[i] != null) { baseSum += skills[i].Base; capSum += skills[i].Cap; }
-        _totalLabel = new MyraLabel($"Total: {baseSum:F1} / {capSum:F1}", MyraLabel.TextStyle.P);
+        _totalLabel = new MyraLabel(string.Format(lang.Total, baseSum, capSum), MyraLabel.TextStyle.P);
         toolbar.Widgets.Add(_totalLabel);
 
         Widgets.Add(toolbar);
@@ -295,6 +297,8 @@ public class SkillsTabContent : VerticalStackPanel
 
     public void UpdateSkills()
     {
+        var lang = Language.Instance.Assistant.Skills;
+
         _resort?.Invoke();
         _rebuild?.Invoke();
 
@@ -303,7 +307,7 @@ public class SkillsTabContent : VerticalStackPanel
             float baseSum = 0f, capSum = 0f;
             for (int i = 0; i < _skills.Length; i++)
                 if (_skills[i] != null) { baseSum += _skills[i].Base; capSum += _skills[i].Cap; }
-            _totalLabel.Text = $"Total: {baseSum:F1} / {capSum:F1}";
+            _totalLabel.Text = string.Format(lang.Total, baseSum, capSum);
         }
     }
 }

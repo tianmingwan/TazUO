@@ -12,6 +12,7 @@ public static class HudTabContent
 {
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.Hud;
         Profile profile = ProfileManager.CurrentProfile;
 
         var regularFlags = new List<HideHudFlags>();
@@ -35,7 +36,7 @@ public static class HudTabContent
         var outerStack = new VerticalStackPanel { Spacing = 6 };
 
         outerStack.Widgets.Add(new MyraLabel(
-            "Select gump types to toggle visibility when using the Toggle Hud Visible macro.",
+            lang.HeaderDescription,
             MyraLabel.TextStyle.H3));
 
 
@@ -50,15 +51,15 @@ public static class HudTabContent
 
 
         var buttonRow = new HorizontalStackPanel { Spacing = 4 };
-        buttonRow.Widgets.Add(new MyraButton("Select All", () => SetAllChecked(checkButtons, profile, true)));
+        buttonRow.Widgets.Add(new MyraButton(lang.SelectAll, () => SetAllChecked(checkButtons, profile, true)));
 
-        var deselectBtn = new MyraButton("Deselect All", () => SetAllChecked(checkButtons, profile, false));
+        var deselectBtn = new MyraButton(lang.DeselectAll, () => SetAllChecked(checkButtons, profile, false));
         StackPanel.SetProportionType(deselectBtn, ProportionType.Fill);
         buttonRow.Widgets.Add(deselectBtn);
 
-        buttonRow.Widgets.Add(new MyraButton("Toggle HUD Now", () => HideHudManager.ToggleHidden(profile.HideHudGumpFlags))
+        buttonRow.Widgets.Add(new MyraButton(lang.ToggleHudNow, () => HideHudManager.ToggleHidden(profile.HideHudGumpFlags))
         {
-            Tooltip = "Immediately toggle the visibility of selected HUD elements"
+            Tooltip = lang.ToggleHudNowTooltip
         });
         outerStack.Widgets.Add(buttonRow);
 
@@ -72,34 +73,38 @@ public static class HudTabContent
             cb.IsChecked = state;
     }
 
-    private static string GetTooltip(HideHudFlags flag) => flag switch
+    private static string GetTooltip(HideHudFlags flag)
     {
-        HideHudFlags.Paperdoll => "Character paperdoll windows",
-        HideHudFlags.WorldMap => "World map window",
-        HideHudFlags.GridContainers => "Grid-style container windows",
-        HideHudFlags.Containers => "Traditional container windows",
-        HideHudFlags.Healthbars => "Health bar windows",
-        HideHudFlags.StatusBar => "Character status windows",
-        HideHudFlags.SpellBar => "Spell bar windows",
-        HideHudFlags.Journal => "Journal/chat windows",
-        HideHudFlags.XMLGumps => "Server-sent XML gump windows",
-        HideHudFlags.NearbyCorpseLoot => "Nearby corpse loot windows",
-        HideHudFlags.MacroButtons => "Macro button windows",
-        HideHudFlags.SkillButtons => "Skill button windows",
-        HideHudFlags.SkillsMenus => "Skills menu windows",
-        HideHudFlags.TopMenuBar => "Top menu bar",
-        HideHudFlags.DurabilityTracker => "Item durability tracker",
-        HideHudFlags.BuffBar => "Buff/debuff status bars",
-        HideHudFlags.CounterBar => "Item counter bars",
-        HideHudFlags.InfoBar => "Information bars",
-        HideHudFlags.SpellIcons => "Spell icon buttons",
-        HideHudFlags.NameOverheadGump => "Name overhead displays",
-        HideHudFlags.ScriptManagerGump => "Script manager window",
-        HideHudFlags.PlayerChar => "Player character (your avatar in the game world)",
-        HideHudFlags.Mouse => "Mouse cursor",
-        HideHudFlags.HealthBarCollector => "Health bar collector window",
-        HideHudFlags.AbilityButtons => "Ability button windows",
-        HideHudFlags.DebugGump => "Debug information window",
-        _ => null
-    };
+        var lang = Language.Instance.Assistant.Hud;
+        return flag switch
+        {
+            HideHudFlags.Paperdoll => lang.PaperdollTooltip,
+            HideHudFlags.WorldMap => lang.WorldMapTooltip,
+            HideHudFlags.GridContainers => lang.GridContainersTooltip,
+            HideHudFlags.Containers => lang.ContainersTooltip,
+            HideHudFlags.Healthbars => lang.HealthbarsTooltip,
+            HideHudFlags.StatusBar => lang.StatusBarTooltip,
+            HideHudFlags.SpellBar => lang.SpellBarTooltip,
+            HideHudFlags.Journal => lang.JournalTooltip,
+            HideHudFlags.XMLGumps => lang.XmlGumpsTooltip,
+            HideHudFlags.NearbyCorpseLoot => lang.NearbyCorpseLootTooltip,
+            HideHudFlags.MacroButtons => lang.MacroButtonsTooltip,
+            HideHudFlags.SkillButtons => lang.SkillButtonsTooltip,
+            HideHudFlags.SkillsMenus => lang.SkillsMenusTooltip,
+            HideHudFlags.TopMenuBar => lang.TopMenuBarTooltip,
+            HideHudFlags.DurabilityTracker => lang.DurabilityTrackerTooltip,
+            HideHudFlags.BuffBar => lang.BuffBarTooltip,
+            HideHudFlags.CounterBar => lang.CounterBarTooltip,
+            HideHudFlags.InfoBar => lang.InfoBarTooltip,
+            HideHudFlags.SpellIcons => lang.SpellIconsTooltip,
+            HideHudFlags.NameOverheadGump => lang.NameOverheadGumpTooltip,
+            HideHudFlags.ScriptManagerGump => lang.ScriptManagerGumpTooltip,
+            HideHudFlags.PlayerChar => lang.PlayerCharTooltip,
+            HideHudFlags.Mouse => lang.MouseTooltip,
+            HideHudFlags.HealthBarCollector => lang.HealthBarCollectorTooltip,
+            HideHudFlags.AbilityButtons => lang.AbilityButtonsTooltip,
+            HideHudFlags.DebugGump => lang.DebugGumpTooltip,
+            _ => null
+        };
+    }
 }

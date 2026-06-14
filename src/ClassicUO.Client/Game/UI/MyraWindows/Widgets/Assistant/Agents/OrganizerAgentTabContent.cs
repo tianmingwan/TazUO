@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
@@ -14,6 +15,9 @@ public static class OrganizerAgentTabContent
 {
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.Agents.Organizer;
+        var common = Language.Instance.UiCommons;
+
         OrganizerConfig? selectedConfig = null;
         var leftPanel = new VerticalStackPanel { Spacing = 4 };
         var rightPanel = new VerticalStackPanel { Spacing = 4 };
@@ -23,18 +27,18 @@ public static class OrganizerAgentTabContent
             itemsPanel.Widgets.Clear();
             if (selectedConfig == null || selectedConfig.ItemConfigs.Count == 0)
             {
-                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.TextStyle.H3));
+                itemsPanel.Widgets.Add(new MyraLabel(lang.NoItemsConfigured, MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Art"),
-                GridColumnInfo.Auto("Hue"),
-                GridColumnInfo.Auto("Amount"),
-                GridColumnInfo.Fill("Destination"),
-                GridColumnInfo.Auto("Enabled"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto(lang.ColArt),
+                GridColumnInfo.Auto(lang.ColHue),
+                GridColumnInfo.Auto(lang.ColAmount),
+                GridColumnInfo.Fill(lang.ColDestination),
+                GridColumnInfo.Auto(lang.ColEnabled),
+                GridColumnInfo.Auto(lang.ColActions)
             );
 
             int dataRow = 1;
@@ -47,7 +51,7 @@ public static class OrganizerAgentTabContent
                     item.Graphic > 0
                         ? new MyraArtTexture((uint)item.Graphic)
                         {
-                            Tooltip = $"Graphic: {item.Graphic:X4}",
+                            Tooltip = string.Format(lang.GraphicTooltip, $"{item.Graphic:X4}"),
                             Margin = new Thickness(2, 0),
                         }
                         : new MyraLabel($"{item.Graphic:X4}", MyraLabel.TextStyle.P);
@@ -66,7 +70,7 @@ public static class OrganizerAgentTabContent
                 var amountBox = new MyraInputBox
                 {
                     Text = item.Amount.ToString(),
-                    Tooltip = "Amount to move. Takes into account items already in destination.\n(0 = move all)",
+                    Tooltip = lang.AmountTooltip,
                     Width = 80,
                 };
                 amountBox.TextChangedByUser += (_, _) =>
@@ -85,35 +89,35 @@ public static class OrganizerAgentTabContent
                     destCell.Widgets.Clear();
                     if (captured.DestContSerial != 0)
                     {
-                        var label = new MyraLabel($"{captured.DestContSerial:X}", MyraLabel.TextStyle.P) { Tooltip = "Per-item destination" };
+                        var label = new MyraLabel($"{captured.DestContSerial:X}", MyraLabel.TextStyle.P) { Tooltip = lang.PerItemDestination };
                         StackPanel.SetProportionType(label, ProportionType.Fill);
                         destCell.Widgets.Add(label);
                         destCell.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
                         {
                             captured.DestContSerial = 0;
                             BuildDestCell();
-                        }) { Tooltip = "Clear and use config destination" }));
+                        }) { Tooltip = lang.ClearAndUseConfigDestination }));
                     }
                     else
                     {
-                        var label = new MyraLabel("Config", MyraLabel.TextStyle.P) { Tooltip = "Using configuration's destination" };
+                        var label = new MyraLabel(lang.Config, MyraLabel.TextStyle.P) { Tooltip = lang.UsingConfigDestination };
                         StackPanel.SetProportionType(label, ProportionType.Fill);
                         destCell.Widgets.Add(label);
-                        destCell.Widgets.Add(new MyraButton("Set", () =>
+                        destCell.Widgets.Add(new MyraButton(lang.Set, () =>
                         {
-                            GameActions.Print("Select [DESTINATION] Container for this item", 82);
+                            GameActions.Print(lang.SelectDestinationContainerForItem, 82);
                             World.Instance.TargetManager.SetTargeting(destination =>
                             {
                                 if (destination is Entity destEntity && SerialHelper.IsItem(destEntity))
                                 {
                                     captured.DestContSerial = destEntity.Serial;
-                                    GameActions.Print($"Per-item destination set to {destEntity.Serial:X}", Constants.HUE_SUCCESS);
+                                    GameActions.Print(string.Format(lang.PerItemDestinationSet, $"{destEntity.Serial:X}"), Constants.HUE_SUCCESS);
                                     BuildDestCell();
                                 }
                                 else
-                                    GameActions.Print("Only items can be selected!");
+                                    GameActions.Print(lang.OnlyItemsCanBeSelected);
                             });
-                        }) { Tooltip = "Set per-item destination" });
+                        }) { Tooltip = lang.SetPerItemDestination });
                     }
                 }
 
@@ -126,11 +130,11 @@ public static class OrganizerAgentTabContent
                 grid.AddWidget(cb, dataRow, 4);
 
                 // Delete
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton(common.Delete, () =>
                 {
                     selectedConfig.DeleteItemConfig(captured);
                     BuildItemsGrid(itemsPanel);
-                }) { Tooltip = "Delete this item" }), dataRow, 5);
+                }) { Tooltip = lang.DeleteThisItem }), dataRow, 5);
 
                 dataRow++;
             }
@@ -141,14 +145,14 @@ public static class OrganizerAgentTabContent
         void BuildConfigList()
         {
             leftPanel.Widgets.Clear();
-            leftPanel.Widgets.Add(new MyraButton("Add Organizer", () =>
+            leftPanel.Widgets.Add(new MyraButton(lang.AddOrganizer, () =>
             {
                 OrganizerConfig newConfig = OrganizerAgent.Instance.NewOrganizerConfig();
                 selectedConfig = newConfig;
                 BuildConfigList();
                 BuildConfigDetails();
             }));
-            leftPanel.Widgets.Add(new MyraLabel("List", MyraLabel.TextStyle.H3));
+            leftPanel.Widgets.Add(new MyraLabel(lang.List, MyraLabel.TextStyle.H3));
 
             foreach (OrganizerConfig config in OrganizerAgent.Instance.OrganizerConfigs)
             {
@@ -158,7 +162,7 @@ public static class OrganizerAgentTabContent
                 {
                     selectedConfig = capturedConfig;
                     BuildConfigDetails();
-                }) { Tooltip = $"{enabledItems} enabled items" };
+                }) { Tooltip = string.Format(lang.EnabledItemsCount, enabledItems) };
                 leftPanel.Widgets.Add(btn);
             }
         }
@@ -168,29 +172,29 @@ public static class OrganizerAgentTabContent
             rightPanel.Widgets.Clear();
             if (selectedConfig == null)
             {
-                rightPanel.Widgets.Add(new MyraLabel("Select an organizer to view details", MyraLabel.TextStyle.P));
+                rightPanel.Widgets.Add(new MyraLabel(lang.SelectOrganizerToViewDetails, MyraLabel.TextStyle.P));
                 return;
             }
 
             // Enabled + Name
             var topRow = new HorizontalStackPanel { Spacing = 8 };
             topRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
-                selectedConfig.Enabled, b => selectedConfig.Enabled = b, "Enabled"));
+                selectedConfig.Enabled, b => selectedConfig.Enabled = b, lang.Enabled));
             var nameBox = new MyraInputBox { Text = selectedConfig.Name, Width = 150 };
             nameBox.TextChangedByUser += (_, _) =>
             {
                 if (!string.IsNullOrWhiteSpace(nameBox.Text))
                     selectedConfig.Name = nameBox.Text;
             };
-            topRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
+            topRow.Widgets.Add(new MyraLabel(lang.NameLabel, MyraLabel.TextStyle.P));
             topRow.Widgets.Add(nameBox);
             rightPanel.Widgets.Add(topRow);
 
             // Action buttons
             var actionRow = new HorizontalStackPanel { Spacing = 4 };
-            actionRow.Widgets.Add(new MyraButton("Run Organizer", () =>
+            actionRow.Widgets.Add(new MyraButton(lang.RunOrganizer, () =>
                 OrganizerAgent.Instance.RunOrganizer(selectedConfig.Name)));
-            actionRow.Widgets.Add(new MyraButton("Duplicate", () =>
+            actionRow.Widgets.Add(new MyraButton(lang.Duplicate, () =>
             {
                 OrganizerConfig? duped = OrganizerAgent.Instance.DupeConfig(selectedConfig);
                 if (duped != null)
@@ -200,12 +204,12 @@ public static class OrganizerAgentTabContent
                     BuildConfigDetails();
                 }
             }));
-            actionRow.Widgets.Add(new MyraButton("Create Macro", () =>
+            actionRow.Widgets.Add(new MyraButton(lang.CreateMacro, () =>
             {
                 OrganizerAgent.Instance.CreateOrganizerMacroButton(selectedConfig.Name);
-                GameActions.Print($"Created Organizer Macro: {selectedConfig.Name}");
+                GameActions.Print(string.Format(lang.CreatedOrganizerMacro, selectedConfig.Name));
             }));
-            actionRow.Widgets.Add(new MyraButton("Import", () =>
+            actionRow.Widgets.Add(new MyraButton(common.Import, () =>
             {
                 string? json = Clipboard.GetClipboardText();
                 if (json.NotNullNotEmpty() && OrganizerAgent.Instance.ImportFromJson(json))
@@ -213,14 +217,14 @@ public static class OrganizerAgentTabContent
                     BuildConfigList();
                     return;
                 }
-                GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-            }) { Tooltip = "Import from clipboard (must have a valid export copied)." });
-            actionRow.Widgets.Add(new MyraButton("Export", () =>
+                GameActions.Print(lang.ClipboardNoValidExport, Constants.HUE_ERROR);
+            }) { Tooltip = lang.ImportTooltip });
+            actionRow.Widgets.Add(new MyraButton(common.Export, () =>
             {
                 OrganizerAgent.Instance.GetJsonExport(selectedConfig)?.CopyToClipboard();
-                GameActions.Print("Exported organizer to your clipboard!", Constants.HUE_SUCCESS);
-            }) { Tooltip = "Export this organizer to clipboard." });
-            actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                GameActions.Print(lang.ExportedOrganizer, Constants.HUE_SUCCESS);
+            }) { Tooltip = lang.ExportTooltip });
+            actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(common.Delete, () =>
             {
                 OrganizerAgent.Instance.DeleteConfig(selectedConfig);
                 List<OrganizerConfig> configs = OrganizerAgent.Instance.OrganizerConfigs;
@@ -232,66 +236,66 @@ public static class OrganizerAgentTabContent
 
             // Container settings
             rightPanel.Widgets.Add(new MyraSpacer(5, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Container Settings:", MyraLabel.TextStyle.H2));
+            rightPanel.Widgets.Add(new MyraLabel(lang.ContainerSettings, MyraLabel.TextStyle.H2));
             var contRow = new HorizontalStackPanel { Spacing = 4 };
-            contRow.Widgets.Add(new MyraButton("Set Source Container", () =>
+            contRow.Widgets.Add(new MyraButton(lang.SetSourceContainer, () =>
             {
-                GameActions.Print("Select [SOURCE] Container", 82);
+                GameActions.Print(lang.SelectSourceContainer, 82);
                 World.Instance.TargetManager.SetTargeting(source =>
                 {
                     if (source is Entity sourceEntity && SerialHelper.IsItem(sourceEntity))
                     {
                         if (selectedConfig == null) return;
                         selectedConfig.SourceContSerial = sourceEntity.Serial;
-                        GameActions.Print($"Source container set to 0x{sourceEntity.Serial:X4} ({sourceEntity.Name})", Constants.HUE_SUCCESS);
+                        GameActions.Print(string.Format(lang.SourceContainerSet, $"{sourceEntity.Serial:X4}", sourceEntity.Name), Constants.HUE_SUCCESS);
                         BuildConfigDetails();
                     }
                     else
-                        GameActions.Print("Only items can be selected!");
+                        GameActions.Print(lang.OnlyItemsCanBeSelected);
                 });
             }));
-            contRow.Widgets.Add(new MyraButton("Set Destination Container", () =>
+            contRow.Widgets.Add(new MyraButton(lang.SetDestinationContainer, () =>
             {
-                GameActions.Print("Select [DESTINATION] Container", 82);
+                GameActions.Print(lang.SelectDestinationContainer, 82);
                 World.Instance.TargetManager.SetTargeting(destination =>
                 {
                     if (destination is Entity destEntity && SerialHelper.IsItem(destEntity))
                     {
                         if (selectedConfig == null) return;
                         selectedConfig.DestContSerial = destEntity.Serial;
-                        GameActions.Print($"Destination container set to 0x{destEntity.Serial:X4} ({destEntity.Name})", Constants.HUE_SUCCESS);
+                        GameActions.Print(string.Format(lang.DestinationContainerSet, $"{destEntity.Serial:X4}", destEntity.Name), Constants.HUE_SUCCESS);
                         BuildConfigDetails();
                     }
                     else
-                        GameActions.Print("Only items can be selected!");
+                        GameActions.Print(lang.OnlyItemsCanBeSelected);
                 });
             }));
             rightPanel.Widgets.Add(contRow);
 
             var contInfoRow = new HorizontalStackPanel { Spacing = 12 };
             string sourceText = selectedConfig.SourceContSerial != 0
-                ? $"Source: (0x{selectedConfig.SourceContSerial:X4})"
-                : "Source: Your backpack";
+                ? string.Format(lang.SourceLabelFormat, $"{selectedConfig.SourceContSerial:X4}")
+                : lang.SourceYourBackpack;
             contInfoRow.Widgets.Add(new MyraLabel(sourceText, MyraLabel.TextStyle.P));
             string destText = selectedConfig.DestContSerial != 0
-                ? $"Destination: (0x{selectedConfig.DestContSerial:X4})"
-                : "Destination: Not set";
+                ? string.Format(lang.DestinationLabelFormat, $"{selectedConfig.DestContSerial:X4}")
+                : lang.DestinationNotSet;
             contInfoRow.Widgets.Add(new MyraLabel(destText, MyraLabel.TextStyle.P));
             rightPanel.Widgets.Add(contInfoRow);
 
             // Items section
             rightPanel.Widgets.Add(new MyraSpacer(5, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Items to Organize:", MyraLabel.TextStyle.H2));
+            rightPanel.Widgets.Add(new MyraLabel(lang.ItemsToOrganize, MyraLabel.TextStyle.H2));
 
             var itemsPanel = new VerticalStackPanel { Spacing = 2 };
 
             // Add item buttons
             var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-            var newGraphicBox = new MyraInputBox { HintText = "Graphic (hex, e.g. 0EED)", Width = 150 };
-            var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1 = any)");
+            var newGraphicBox = new MyraInputBox { HintText = lang.GraphicHexHint, Width = 150 };
+            var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, lang.HueAnyHint);
 
             var addItemRow = new HorizontalStackPanel { Spacing = 4 };
-            addItemRow.Widgets.Add(new MyraButton("Target Item to Add", () =>
+            addItemRow.Widgets.Add(new MyraButton(lang.TargetItemToAdd, () =>
             {
                 World.Instance.TargetManager.SetTargeting(obj =>
                 {
@@ -301,25 +305,25 @@ public static class OrganizerAgentTabContent
                         OrganizerItemConfig newItemConfig = selectedConfig.NewItemConfig();
                         newItemConfig.Graphic = objEntity.Graphic;
                         newItemConfig.Hue = objEntity.Hue;
-                        GameActions.Print($"Added item: Graphic {objEntity.Graphic:X}, Hue {objEntity.Hue:X}");
+                        GameActions.Print(string.Format(lang.AddedItemGraphic, $"{objEntity.Graphic:X}", $"{objEntity.Hue:X}"));
                         BuildItemsGrid(itemsPanel);
                     }
                     else
-                        GameActions.Print("Only items can be added!");
+                        GameActions.Print(lang.OnlyItemsCanBeAdded);
                 });
             }));
-            addItemRow.Widgets.Add(new MyraButton("Add Item Manually", () => addEntryPanel.Visible = !addEntryPanel.Visible));
+            addItemRow.Widgets.Add(new MyraButton(lang.AddItemManually, () => addEntryPanel.Visible = !addEntryPanel.Visible));
             rightPanel.Widgets.Add(addItemRow);
 
             // Manual add form
             var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };
-            addFieldsRow.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P) { Tooltip = "Hex value, e.g. 0EED." });
+            addFieldsRow.Widgets.Add(new MyraLabel(lang.GraphicLabel, MyraLabel.TextStyle.P) { Tooltip = lang.GraphicLabelTooltip });
             addFieldsRow.Widgets.Add(newGraphicBox);
-            addFieldsRow.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P) { Tooltip = "Set to -1 to match any hue." });
+            addFieldsRow.Widgets.Add(new MyraLabel(lang.HueLabel, MyraLabel.TextStyle.P) { Tooltip = lang.HueLabelTooltip });
             addFieldsRow.Widgets.Add(newHueBox);
 
             var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-            addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+            addConfirmRow.Widgets.Add(new MyraButton(common.Add, () =>
             {
                 if (ushort.TryParse(newGraphicBox.Text, NumberStyles.HexNumber, null, out ushort graphic))
                 {
@@ -335,14 +339,14 @@ public static class OrganizerAgentTabContent
                     BuildItemsGrid(itemsPanel);
                 }
             }));
-            addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+            addConfirmRow.Widgets.Add(new MyraButton(common.Cancel, () =>
             {
                 addEntryPanel.Visible = false;
                 newGraphicBox.Text = "";
                 newHueBox.Text = "";
             }));
 
-            addEntryPanel.Widgets.Add(new MyraLabel("Manual Entry:", MyraLabel.TextStyle.H3));
+            addEntryPanel.Widgets.Add(new MyraLabel(lang.ManualEntry, MyraLabel.TextStyle.H3));
             addEntryPanel.Widgets.Add(addFieldsRow);
             addEntryPanel.Widgets.Add(addConfirmRow);
             rightPanel.Widgets.Add(addEntryPanel);

@@ -44,7 +44,7 @@ public class ScriptManagerWindow : MyraControl
 
     private MyraGrid _mainGrid;
 
-    public ScriptManagerWindow() : base("Script Manager")
+    public ScriptManagerWindow() : base(Language.Instance.Scripting.ScriptManagerTitle)
     {
         Instance = this;
         CanBeSaved = true;
@@ -125,10 +125,10 @@ public class ScriptManagerWindow : MyraControl
     private Widget BuildMenuBar()
     {
         var bar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-        bar.Widgets.Add(new MyraButton("Menu", ShowMainMenu));
-        bar.Widgets.Add(new MyraButton("Add +", ShowAddMenu));
+        bar.Widgets.Add(new MyraButton(Language.Instance.Scripting.Menu, ShowMainMenu));
+        bar.Widgets.Add(new MyraButton(Language.Instance.Scripting.Add_, ShowAddMenu));
 
-        var searchBox = new MyraInputBox { HintText = "Search...", Width = 180 };
+        var searchBox = new MyraInputBox { HintText = Language.Instance.Scripting.SearchHint, Width = 180 };
         searchBox.TextChangedByUser += (_, _) =>
         {
             _searchFilter = searchBox.Text ?? "";
@@ -142,13 +142,13 @@ public class ScriptManagerWindow : MyraControl
     {
         bool cacheDisabled = LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache;
         ShowContextMenu(
-            ("Refresh",                    () => _pendingReload = true),
-            ("Public Script Browser",      ScriptBrowser.Show),
-            ("Script Recording",           () => UIManager.Add(new ScriptRecordingGump())),
-            ("Scripting Info",             ScriptingInfoGump.Show),
-            ("Persistent Variables",       PersistentVarsWindow.Show),
-            ("Running Scripts",            RunningScriptsWindow.Show),
-            (ContextMenuLabelToggle(cacheDisabled, "Disable module cache"), () =>
+            (Language.Instance.Scripting.Refresh_,                    () => _pendingReload = true),
+            (Language.Instance.Scripting.PublicScriptBrowser,      ScriptBrowser.Show),
+            (Language.Instance.Scripting.ScriptRecording,           () => UIManager.Add(new ScriptRecordingGump())),
+            (Language.Instance.Scripting.ScriptingInfo,             ScriptingInfoGump.Show),
+            (Language.Instance.Scripting.PersistentVariables,       PersistentVarsWindow.Show),
+            (Language.Instance.Scripting.RunningScripts_,            RunningScriptsWindow.Show),
+            (ContextMenuLabelToggle(cacheDisabled, Language.Instance.Scripting.DisableModuleCache), () =>
                 LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache = !cacheDisabled)
         );
     }
@@ -215,7 +215,7 @@ public class ScriptManagerWindow : MyraControl
         if (!string.IsNullOrEmpty(indent))
             groupRow.Widgets.Add(new MyraLabel(indent, MyraLabel.TextStyle.P));
 
-        groupRow.Widgets.Add(new MyraButton(isCollapsed ? "[+]" : "[-]", () =>
+        groupRow.Widgets.Add(new MyraButton(isCollapsed ? Language.Instance.Scripting.Collapse : Language.Instance.Scripting.Expand, () =>
         {
             ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
             RebuildScriptList();
@@ -229,7 +229,7 @@ public class ScriptManagerWindow : MyraControl
         };
         groupRow.Widgets.Add(groupLabel);
 
-        groupRow.Widgets.Add(new MyraButton("...", () => ShowGroupContextMenu(parentGroup, groupName)));
+        groupRow.Widgets.Add(new MyraButton(Language.Instance.Scripting.More, () => ShowGroupContextMenu(parentGroup, groupName)));
 
         _scriptListPanel.Widgets.Add(groupRow);
 
@@ -257,10 +257,10 @@ public class ScriptManagerWindow : MyraControl
         if (!string.IsNullOrEmpty(indent))
             row.Widgets.Add(new MyraLabel(indent, MyraLabel.TextStyle.P));
 
-        row.Widgets.Add(new MyraButton("...", () => ShowScriptContextMenu(script)));
+        row.Widgets.Add(new MyraButton(Language.Instance.Scripting.More, () => ShowScriptContextMenu(script)));
 
         bool isPlaying = script.IsPlaying;
-        var playStopBtn = new MyraButton(isPlaying ? "Stop" : "Play", () =>
+        var playStopBtn = new MyraButton(isPlaying ? Language.Instance.Scripting.Stop : Language.Instance.Scripting.Play_, () =>
         {
             if (script.IsPlaying)
                 LegionScripting.LegionScripting.StopScript(script);
@@ -279,7 +279,7 @@ public class ScriptManagerWindow : MyraControl
             row.Widgets.Add(new MyraLabel(hasGlobal ? "[G]" : "[C]", MyraLabel.TextStyle.P)
             {
                 TextColor = hasGlobal ? Color.Gold : new Color(0, 204, 255, 255),
-                Tooltip = hasGlobal ? "Autostart: All characters" : "Autostart: This character"
+                Tooltip = hasGlobal ? Language.Instance.Scripting.AutostartAllCharsTooltip : Language.Instance.Scripting.AutostartThisCharTooltip
             });
         }
 
@@ -307,26 +307,26 @@ public class ScriptManagerWindow : MyraControl
         bool charAuto   = LegionScripting.LegionScripting.AutoLoadEnabled(script, false);
 
         ShowContextMenu(
-            ("Edit Constants",       () => new ScriptConstantsEditorWindow(script)),
-            ("Rename",               () => ShowRenameScriptDialog(script)),
-            ("Edit",                 () => new ScriptEditorWindow(script)),
-            ("Edit Externally",      () => FileSystemHelper.OpenFileWithDefaultApp(script.FullPath)),
+            (Language.Instance.Scripting.EditConstants,       () => new ScriptConstantsEditorWindow(script)),
+            (Language.Instance.Scripting.Rename,               () => ShowRenameScriptDialog(script)),
+            (Language.Instance.Scripting.Edit_,                 () => new ScriptEditorWindow(script)),
+            (Language.Instance.Scripting.EditExternally,      () => FileSystemHelper.OpenFileWithDefaultApp(script.FullPath)),
             (Language.Instance.Scripting.OpenLocation, () =>
             {
                 if (!FileSystemHelper.OpenLocation(script.FullPath))
                     GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, script.FullPath));
             }),
-            (ContextMenuLabelToggle(globalAuto, "Autostart on all chars"), () =>
+            (ContextMenuLabelToggle(globalAuto, Language.Instance.Scripting.AutostartAllChars), () =>
             {
                 LegionScripting.LegionScripting.SetAutoPlay(script, true, !globalAuto);
                 RebuildScriptList();
             }),
-            (ContextMenuLabelToggle(charAuto, "Autostart for this char"), () =>
+            (ContextMenuLabelToggle(charAuto, Language.Instance.Scripting.AutostartThisChar), () =>
             {
                 LegionScripting.LegionScripting.SetAutoPlay(script, false, !charAuto);
                 RebuildScriptList();
             }),
-            ("Create Macro Button", () =>
+            (Language.Instance.Scripting.CreateMacroButton, () =>
             {
                 var mm = MacroManager.TryGetMacroManager(World.Instance);
                 if (mm == null) return;
@@ -338,9 +338,9 @@ public class ScriptManagerWindow : MyraControl
                 bg.CenterYInViewPort();
                 UIManager.Add(bg);
             }),
-            ("Delete", () => ShowDeleteConfirm(
-                "Delete Script",
-                $"Are you sure you want to delete '{script.FileName}'?\nThis action cannot be undone.",
+            (Language.Instance.Scripting.Delete_, () => ShowDeleteConfirm(
+                Language.Instance.Scripting.DeleteScript,
+                string.Format(Language.Instance.Scripting.DeleteScriptConfirm, script.FileName),
                 () => PerformDeleteScript(script)))
         );
     }
@@ -354,17 +354,17 @@ public class ScriptManagerWindow : MyraControl
         var items = new List<(string, Action)>();
 
         if (isRealGroup)
-            items.Add(("Rename Group", () => ShowRenameGroupDialog(groupName, parentGroup)));
+            items.Add((Language.Instance.Scripting.RenameGroup, () => ShowRenameGroupDialog(groupName, parentGroup)));
 
-        items.Add(("New Script", () => ShowNewScriptDialog(_contextMenuGroup, _contextMenuSubGroup)));
+        items.Add((Language.Instance.Scripting.NewScript, () => ShowNewScriptDialog(_contextMenuGroup, _contextMenuSubGroup)));
 
         if (string.IsNullOrEmpty(parentGroup))
-            items.Add(("New Group", ShowNewGroupDialog));
+            items.Add((Language.Instance.Scripting.NewGroup, ShowNewGroupDialog));
 
         if (isRealGroup)
-            items.Add(("Delete Group", () => ShowDeleteConfirm(
-                "Delete Group",
-                $"Delete group '{groupName}'?\nThis will permanently delete the folder and ALL scripts inside it.",
+            items.Add((Language.Instance.Scripting.DeleteGroup, () => ShowDeleteConfirm(
+                Language.Instance.Scripting.DeleteGroup,
+                string.Format(Language.Instance.Scripting.DeleteGroupConfirm, groupName),
                 () => PerformDeleteGroup(groupName, parentGroup))));
 
         ShowContextMenu(items.ToArray());
@@ -376,10 +376,10 @@ public class ScriptManagerWindow : MyraControl
     {
         var nameBox = new MyraInputBox { HintText = "script_name", Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel("Enter a name for this script:", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(Language.Instance.Scripting.EnterScriptName, MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("New Script", content, ok =>
+        new MyraDialog(Language.Instance.Scripting.NewScriptTitle, content, ok =>
         {
             if (!ok) return;
             string name = nameBox.Text?.Trim() ?? "";
@@ -392,10 +392,10 @@ public class ScriptManagerWindow : MyraControl
     {
         var nameBox = new MyraInputBox { HintText = "group_name", Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel("Enter a name for this group:", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(Language.Instance.Scripting.EnterGroupName, MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("New Group", content, ok =>
+        new MyraDialog(Language.Instance.Scripting.NewGroupTitle, content, ok =>
         {
             if (!ok) return;
             CreateGroup(nameBox.Text?.Trim() ?? "", _contextMenuGroup, _contextMenuSubGroup);
@@ -410,10 +410,10 @@ public class ScriptManagerWindow : MyraControl
 
         var nameBox = new MyraInputBox { Text = displayName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"New name for '{displayName}':", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(string.Format(Language.Instance.Scripting.NewNameForScript, displayName), MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("Rename Script", content, ok =>
+        new MyraDialog(Language.Instance.Scripting.RenameScriptTitle, content, ok =>
         {
             if (ok) PerformRenameScript(script, nameBox.Text?.Trim() ?? "");
         });
@@ -423,10 +423,10 @@ public class ScriptManagerWindow : MyraControl
     {
         var nameBox = new MyraInputBox { Text = groupName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"New name for group '{groupName}':", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(string.Format(Language.Instance.Scripting.NewNameForGroup, groupName), MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("Rename Group", content, ok =>
+        new MyraDialog(Language.Instance.Scripting.RenameGroupTitle, content, ok =>
         {
             if (ok) PerformRenameGroup(groupName, parentGroup, nameBox.Text?.Trim() ?? "");
         });
@@ -471,7 +471,7 @@ public class ScriptManagerWindow : MyraControl
             sanitizedName.Contains('\\') || sanitizedName.Contains('/') ||
             sanitizedName.Contains("..") || sanitizedName is "." or "..")
         {
-            GameActions.Print(World.Instance, "Invalid script name.", 32);
+            GameActions.Print(World.Instance, Language.Instance.Scripting.InvalidScriptName, 32);
             return;
         }
 
@@ -494,7 +494,7 @@ public class ScriptManagerWindow : MyraControl
             if (!targetDirFull.StartsWith(scriptsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !targetDirFull.Equals(scriptsRoot, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, "Invalid target directory.", 32);
+                GameActions.Print(World.Instance, Language.Instance.Scripting.InvalidTargetDirectory, 32);
                 return;
             }
 
@@ -504,16 +504,16 @@ public class ScriptManagerWindow : MyraControl
             {
                 File.WriteAllText(targetFileFull, SCRIPT_HEADER);
                 _pendingReload = true;
-                GameActions.Print(World.Instance, $"Created script '{sanitizedName}'", 66);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.CreatedScript, sanitizedName), 66);
             }
             else
             {
-                GameActions.Print(World.Instance, $"A script named '{sanitizedName}' already exists.", 32);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ScriptAlreadyExists, sanitizedName), 32);
             }
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"File operation failed: {ioEx.Message}", 32); }
-        catch (Exception e) { GameActions.Print(World.Instance, $"Error creating script: {e.Message}", 32); Log.Error(e.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, Language.Instance.Scripting.AccessDenied, 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.FileOperationFailed, ioEx.Message), 32); }
+        catch (Exception e) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorCreatingScript, e.Message), 32); Log.Error(e.ToString()); }
     }
 
     private void CreateGroup(string name, string contextGroup, string contextSubGroup)
@@ -528,7 +528,7 @@ public class ScriptManagerWindow : MyraControl
             sanitizedName.Contains('\\') || sanitizedName.Contains('/') ||
             sanitizedName is ".." or ".")
         {
-            GameActions.Print(World.Instance, "Invalid group name.", 32);
+            GameActions.Print(World.Instance, Language.Instance.Scripting.InvalidGroupName, 32);
             return;
         }
 
@@ -548,18 +548,18 @@ public class ScriptManagerWindow : MyraControl
             if (!targetPath.StartsWith(scriptsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !targetPath.Equals(scriptsRoot, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, "Invalid group location.", 32);
+                GameActions.Print(World.Instance, Language.Instance.Scripting.InvalidGroupLocation, 32);
                 return;
             }
 
             if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
             File.WriteAllText(Path.Combine(targetPath, "Example.py"), "import API");
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Created group '{sanitizedName}'", 66);
+            GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.CreatedGroup, sanitizedName), 66);
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Directory operation failed: {ioEx.Message}", 32); }
-        catch (Exception e) { GameActions.Print(World.Instance, $"Error creating group: {e.Message}", 32); Log.Error(e.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, Language.Instance.Scripting.AccessDenied, 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.DirectoryOperationFailed, ioEx.Message), 32); }
+        catch (Exception e) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorCreatingGroup, e.Message), 32); Log.Error(e.ToString()); }
     }
 
     private void PerformRenameScript(ScriptFile script, string newDisplayName)
@@ -577,7 +577,7 @@ public class ScriptManagerWindow : MyraControl
 
             if (File.Exists(newPath) && !string.Equals(script.FullPath, newPath))
             {
-                GameActions.Print(World.Instance, $"A file named '{newName}' already exists.", 32);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.FileAlreadyExists, newName), 32);
                 return;
             }
 
@@ -589,7 +589,7 @@ public class ScriptManagerWindow : MyraControl
                 _pendingReload   = true;
             }
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error renaming script: {ex.Message}", 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorRenamingScript, ex.Message), 32); }
     }
 
     private void PerformRenameGroup(string groupName, string parentGroup, string newName)
@@ -611,25 +611,25 @@ public class ScriptManagerWindow : MyraControl
 
             if (Directory.Exists(newPath) && !string.Equals(currentPath, newPath, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, $"A group named '{newName}' already exists.", 32);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.GroupAlreadyExists, newName), 32);
                 return;
             }
             if (!Directory.Exists(currentPath))
             {
-                GameActions.Print(World.Instance, $"Source group '{groupName}' not found.", 32);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.SourceGroupNotFound, groupName), 32);
                 return;
             }
             if (!string.Equals(currentPath, newPath, StringComparison.OrdinalIgnoreCase))
             {
                 Directory.Move(currentPath, newPath);
                 _pendingReload = true;
-                GameActions.Print(World.Instance, $"Renamed group '{groupName}' to '{newName}'", 66);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.RenamedGroup, groupName, newName), 66);
             }
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (DirectoryNotFoundException)  { GameActions.Print(World.Instance, "Directory not found.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Directory operation failed: {ioEx.Message}", 32); }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error renaming group: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, Language.Instance.Scripting.AccessDenied, 32); }
+        catch (DirectoryNotFoundException)  { GameActions.Print(World.Instance, Language.Instance.Scripting.DirectoryNotFound, 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.DirectoryOperationFailed, ioEx.Message), 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorRenamingGroup, ex.Message), 32); Log.Error(ex.ToString()); }
     }
 
     private void PerformDeleteScript(ScriptFile script)
@@ -639,9 +639,9 @@ public class ScriptManagerWindow : MyraControl
             File.Delete(script.FullPath);
             LegionScripting.LegionScripting.LoadedScripts.Remove(script);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted script '{script.FileName}'", 66);
+            GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.DeletedScript, script.FileName), 66);
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting script: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (Exception ex) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorDeletingScript, ex.Message), 32); Log.Error(ex.ToString()); }
     }
 
     private void PerformDeleteGroup(string groupName, string parentGroup)
@@ -653,16 +653,16 @@ public class ScriptManagerWindow : MyraControl
 
             if (!Directory.Exists(gPath))
             {
-                GameActions.Print(World.Instance, $"Group '{groupName}' not found", 32);
+                GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.GroupNotFound, groupName), 32);
                 return;
             }
 
             Directory.Delete(gPath, true);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted group '{groupName}' and all its contents", 66);
+            GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.DeletedGroup, groupName), 66);
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Delete operation failed: {ioEx.Message}", 32); }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting group: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, Language.Instance.Scripting.AccessDenied, 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.DeleteOperationFailed, ioEx.Message), 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, string.Format(Language.Instance.Scripting.ErrorDeletingGroup, ex.Message), 32); Log.Error(ex.ToString()); }
     }
 }

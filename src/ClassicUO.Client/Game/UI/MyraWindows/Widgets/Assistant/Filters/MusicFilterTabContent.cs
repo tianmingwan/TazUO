@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
@@ -13,11 +14,11 @@ public static class MusicFilterTabContent
 {
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.MusicFilter;
+        var ui = Language.Instance.UiCommons;
         var root = new VerticalStackPanel { Spacing = 6 };
 
-        root.Widgets.Add(new MyraLabel(
-            "Music Filter allows you to mute specific in-game music tracks by their ID.",
-            MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(lang.HeaderDescription, MyraLabel.TextStyle.H3));
 
         var lastMusicPanel = new VerticalStackPanel { Spacing = 2 };
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
@@ -29,13 +30,13 @@ public static class MusicFilterTabContent
 
             if (filterList.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No music filtered.", MyraLabel.TextStyle.P));
+                filtersPanel.Widgets.Add(new MyraLabel(lang.NoMusicFiltered, MyraLabel.TextStyle.P));
                 return;
             }
 
-            filtersPanel.Widgets.Add(new MyraLabel($"Total: {filterList.Count} track(s) filtered", MyraLabel.TextStyle.P));
+            filtersPanel.Widgets.Add(new MyraLabel(string.Format(lang.TotalFiltered, filterList.Count), MyraLabel.TextStyle.P));
 
-            filtersPanel.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Clear All Filters", () =>
+            filtersPanel.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(ui.ClearAllFilters, () =>
             {
                 SoundFilterManager.Instance.Clear(isMusic: true);
                 BuildFilterList();
@@ -43,8 +44,8 @@ public static class MusicFilterTabContent
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Music ID"),
-                GridColumnInfo.Fill("Actions")
+                GridColumnInfo.Auto(lang.ColMusicId),
+                GridColumnInfo.Fill(lang.ColActions)
             );
 
             int dataRow = 1;
@@ -71,19 +72,19 @@ public static class MusicFilterTabContent
 
                 var actionsPanel = new HorizontalStackPanel { Spacing = 4 };
                 actionsPanel.Widgets.Add(
-                    new MyraButton("Play", () =>
+                    new MyraButton(ui.Play, () =>
                     {
                         Client.Game.Audio.StopMusic();
                         Client.Game.Audio.PlayMusic(current[0], skipIgnore: true);
                     })
                     {
-                        Tooltip = "Test play this track (bypasses filter)",
+                        Tooltip = lang.PlayTooltip,
                     }
                 );
                 actionsPanel.Widgets.Add(
                     MyraStyle.ApplyButtonDangerStyle(
                         new MyraButton(
-                            "Delete",
+                            ui.Delete,
                             () =>
                             {
                                 SoundFilterManager.Instance.RemoveFilter(current[0], isMusic: true);
@@ -91,7 +92,7 @@ public static class MusicFilterTabContent
                             }
                         )
                         {
-                            Tooltip = "Delete this filter",
+                            Tooltip = lang.DeleteTooltip,
                         }
                     )
                 );
@@ -106,7 +107,7 @@ public static class MusicFilterTabContent
         void BuildLastMusicSection()
         {
             lastMusicPanel.Widgets.Clear();
-            lastMusicPanel.Widgets.Add(new MyraLabel("Recently played:", MyraLabel.TextStyle.H3));
+            lastMusicPanel.Widgets.Add(new MyraLabel(lang.RecentlyPlayed, MyraLabel.TextStyle.H3));
 
             int c = 0;
             foreach ((int, string) track in Client.Game.Audio.LastPlayedMusic.GetItems())
@@ -116,42 +117,40 @@ public static class MusicFilterTabContent
                 int id = track.Item1;
 
                 var row = new HorizontalStackPanel { Spacing = 4 };
-                row.Widgets.Add(new MyraLabel($"Music ID: {id} ({track.Item2})", MyraLabel.TextStyle.P));
-                row.Widgets.Add(new MyraButton("Add Filter", () =>
+                row.Widgets.Add(new MyraLabel(string.Format(lang.MusicIdLabel, id, track.Item2), MyraLabel.TextStyle.P));
+                row.Widgets.Add(new MyraButton(ui.AddFilter, () =>
                 {
                     SoundFilterManager.Instance.AddFilter(id, isMusic: true);
                     BuildFilterList();
-                }) { Tooltip = "Add this track to the filter list" });
-                row.Widgets.Add(new MyraButton("Play Again", () =>
+                }) { Tooltip = lang.AddFilterTooltip });
+                row.Widgets.Add(new MyraButton(ui.PlayAgain, () =>
                 {
                     Client.Game.Audio.StopMusic();
                     Client.Game.Audio.PlayMusic(id);
-                }) { Tooltip = "Play this track again" });
+                }) { Tooltip = lang.PlayAgainTooltip });
                 lastMusicPanel.Widgets.Add(row);
             }
 
-            lastMusicPanel.Widgets.Add(new MyraButton("Refresh", () => BuildLastMusicSection())
+            lastMusicPanel.Widgets.Add(new MyraButton(ui.Refresh, () => BuildLastMusicSection())
             {
-                Tooltip = "Refresh last played music display"
-            }.PlaceBefore(new MyraLabel(
-                              "Tip: Let music play in-game to see its ID above, then click Add Filter.",
-                              MyraLabel.TextStyle.P)));
+                Tooltip = lang.RefreshTooltip
+            }.PlaceBefore(new MyraLabel(lang.TipText, MyraLabel.TextStyle.P)));
 
             if (c == 0)
             {
                 var row = new HorizontalStackPanel { Spacing = 4 };
-                row.Widgets.Add(new MyraLabel("No music played yet.", MyraLabel.TextStyle.P));
-                row.Widgets.Add(new MyraButton("Refresh", () => BuildLastMusicSection())
-                    { Tooltip = "Refresh last played music display" });
+                row.Widgets.Add(new MyraLabel(lang.NoMusicPlayed, MyraLabel.TextStyle.P));
+                row.Widgets.Add(new MyraButton(ui.Refresh, () => BuildLastMusicSection())
+                    { Tooltip = lang.RefreshTooltip });
                 lastMusicPanel.Widgets.Add(row);
             }
         }
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newMusicBox = new MyraInputBox { HintText = "Music ID (0-149)", Width = 120 };
+        var newMusicBox = new MyraInputBox { HintText = lang.MusicIdHint, Width = 120 };
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-        addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(ui.Add, () =>
         {
             if (int.TryParse(newMusicBox.Text, out int musicId))
             {
@@ -162,43 +161,43 @@ public static class MusicFilterTabContent
                 BuildFilterList();
             }
         }));
-        addConfirmRow.Widgets.Add(new MyraButton("Test Play", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(ui.TestPlay, () =>
         {
             if (int.TryParse(newMusicBox.Text, out int musicId))
                 Client.Game.Audio.PlayMusic(Math.Clamp(musicId, 0, 149), false, true);
-        }) { Tooltip = "Test play this music ID" });
-        addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+        }) { Tooltip = lang.TestPlayTooltip });
+        addConfirmRow.Widgets.Add(new MyraButton(ui.Cancel, () =>
         {
             addFilterPanel.Visible = false;
             newMusicBox.Text = "";
         }));
 
         var addFieldRow = new HorizontalStackPanel { Spacing = 4 };
-        addFieldRow.Widgets.Add(new MyraLabel("Music ID:", MyraLabel.TextStyle.P)
-            { Tooltip = "Enter the numeric ID of the music track to filter (0-149)" });
+        addFieldRow.Widgets.Add(new MyraLabel(lang.MusicIdLabelPlain, MyraLabel.TextStyle.P)
+            { Tooltip = lang.MusicIdLabelTooltip });
         addFieldRow.Widgets.Add(newMusicBox);
 
-        addFilterPanel.Widgets.Add(new MyraLabel("Add Music Filter:", MyraLabel.TextStyle.H3));
+        addFilterPanel.Widgets.Add(new MyraLabel(lang.AddMusicFilterLabel, MyraLabel.TextStyle.H3));
         addFilterPanel.Widgets.Add(addFieldRow);
         addFilterPanel.Widgets.Add(addConfirmRow);
 
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
-        actionRow.Widgets.Add(new MyraButton("Add Filter Entry", () => addFilterPanel.Visible = !addFilterPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        actionRow.Widgets.Add(new MyraButton(lang.AddFilterEntry, () => addFilterPanel.Visible = !addFilterPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton(ui.Import, () =>
         {
             try
             {
                 string? json = Clipboard.GetClipboardText();
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    GameActions.Print("Clipboard is empty", Constants.HUE_ERROR);
+                    GameActions.Print(lang.ClipboardEmpty, Constants.HUE_ERROR);
                     return;
                 }
 
                 HashSet<int>? importedFilters = JsonSerializer.Deserialize(json, HashSetIntContext.Default.HashSetInt32);
                 if (importedFilters == null)
                 {
-                    GameActions.Print("Failed to parse clipboard data", Constants.HUE_ERROR);
+                    GameActions.Print(lang.ParseFailed, Constants.HUE_ERROR);
                     return;
                 }
 
@@ -210,14 +209,14 @@ public static class MusicFilterTabContent
                 }
                 SoundFilterManager.Instance.Save(isMusic: true);
                 BuildFilterList();
-                GameActions.Print($"Added {added} music filter(s) from clipboard", Constants.HUE_SUCCESS);
+                GameActions.Print(string.Format(lang.ImportSuccess, added), Constants.HUE_SUCCESS);
             }
             catch (Exception ex)
             {
-                GameActions.Print($"Import failed: {ex.Message}", Constants.HUE_ERROR);
+                GameActions.Print(string.Format(lang.ImportFailed, ex.Message), Constants.HUE_ERROR);
             }
         }) { Tooltip = "Import filtered music tracks from clipboard JSON (adds to current filters)" });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+        actionRow.Widgets.Add(new MyraButton(ui.Export, () =>
         {
             try
             {
@@ -226,12 +225,12 @@ public static class MusicFilterTabContent
                     HashSetIntContext.Default.HashSetInt32);
                 json.CopyToClipboard();
                 GameActions.Print(
-                    $"Exported {SoundFilterManager.Instance.FilteredMusic.Count} music filter(s) to clipboard",
+                    string.Format(lang.ExportSuccess, SoundFilterManager.Instance.FilteredMusic.Count),
                     Constants.HUE_SUCCESS);
             }
             catch (Exception ex)
             {
-                GameActions.Print($"Export failed: {ex.Message}", Constants.HUE_ERROR);
+                GameActions.Print(string.Format(lang.ExportFailed, ex.Message), Constants.HUE_ERROR);
             }
         }) { Tooltip = "Export all filtered music tracks as JSON to clipboard" });
 
@@ -239,7 +238,7 @@ public static class MusicFilterTabContent
         root.Widgets.Add(lastMusicPanel);
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addFilterPanel);
-        root.Widgets.Add(new MyraLabel("Filtered Music:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(lang.FilteredMusicLabel, MyraLabel.TextStyle.H3));
         BuildFilterList();
         root.Widgets.Add(new ScrollViewer { Height = 250, Content = filtersPanel });
 

@@ -1,3 +1,4 @@
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
@@ -29,7 +30,7 @@ public class AssistantWindow : MyraControl
 
     private SkillsTabContent _skillsTabContent;
 
-    public AssistantWindow() : base("Legion Assistant")
+    public AssistantWindow() : base(Language.Instance.Assistant.WindowTitle)
     {
         CanBeSaved = true;
         Build();
@@ -56,12 +57,12 @@ public class AssistantWindow : MyraControl
     private void Build()
     {
         var tabs = new MyraTabControl();
-        tabs.AddTab("General", GeneralTab.Build);
-        tabs.AddTab("Agents", AgentTab.Build);
-        tabs.AddTab("Filters", FiltersTab.Build);
-        tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
-        tabs.AddTab("Macros", MacrosTabContent.Build);
-        tabs.AddTab("Skills", () => _skillsTabContent = new());
+        tabs.AddTab(Language.Instance.Assistant.TabGeneral, GeneralTab.Build);
+        tabs.AddTab(Language.Instance.Assistant.TabAgents, AgentTab.Build);
+        tabs.AddTab(Language.Instance.Assistant.TabFilters, FiltersTab.Build);
+        tabs.AddTab(Language.Instance.Assistant.TabItemDatabase, ItemDatabaseTabContent.Build);
+        tabs.AddTab(Language.Instance.Assistant.TabMacros, MacrosTabContent.Build);
+        tabs.AddTab(Language.Instance.Assistant.TabSkills, () => _skillsTabContent = new());
         tabs.SelectFirst();
         SetRootContent(tabs);
     }

@@ -382,8 +382,8 @@ namespace ClassicUO.Game.UI.Gumps
                 ContextMenu = new ContextMenuControl(_gump);
                 ContextMenu.Add(ResGumps.UseObject, Use);
                 ContextMenu.Add(ResGumps.Remove, RemoveItem);
-                ContextMenu.Add("Set spell", GenSpellList());
-                ContextMenu.Add("Quick set spell", QuickSetSpell);
+                ContextMenu.Add(Language.Instance.CounterBar.SetSpell, GenSpellList());
+                ContextMenu.Add(Language.Instance.CounterBar.QuickSetSpell, QuickSetSpell);
             }
 
             public ushort Graphic { get; private set; }

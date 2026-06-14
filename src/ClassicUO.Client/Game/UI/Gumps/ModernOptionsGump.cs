@@ -1289,7 +1289,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.BlankLine();
 
-            content.AddToRight(new CheckboxWithLabel("Enable post processing effects", 0,
+            content.AddToRight(new CheckboxWithLabel(lang.GetVideo.EnablePostProcessing, 0,
                 profile.EnablePostProcessingEffects, (b) =>
                 {
                     profile.EnablePostProcessingEffects = b;
@@ -1301,7 +1301,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight(
                 new ComboBoxWithLabel(
                     World,
-                    "Processing type",
+                    lang.GetVideo.PostProcessingType,
                     150,
                     ThemeSettings.COMBO_BOX_WIDTH,
                     ["point", "linear", "anisotropic", "xbr"],
@@ -1498,7 +1498,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToLeft
             (
-                b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.Activate, "Move Up",
+                b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.Activate, lang.GetMacros.MoveUp,
                     ThemeSettings.BUTTON_FONT_COLOR) { ButtonParameter = page, IsSelectable = false }
             );
 
@@ -1524,7 +1524,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToLeft
             (
-                b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.Activate, "Move Down",
+                b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.Activate, lang.GetMacros.MoveDown,
                     ThemeSettings.BUTTON_FONT_COLOR) { ButtonParameter = page, IsSelectable = false }
             );
 

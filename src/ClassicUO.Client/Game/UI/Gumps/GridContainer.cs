@@ -112,8 +112,8 @@ namespace ClassicUO.Game.UI.Gumps
             get
             {
                 if (_isCorpse)
-                    return $"Drop an item here to send it to your backpack.<br><br>Click this icon to enable/disable single-click looting for corpses.<br>   Currently {QuickLootStatus}";
-                return $"Drop an item here to send it to your backpack.<br><br>Click this icon to enable/disable single-click loot for this container while it remains open.<br>   Currently {GetEnabledDisabledText(_quickLootThisContainer)}";
+                    return string.Format(Language.Instance.GridContainer.DropHereQuickLootCorpse, QuickLootStatus);
+                return string.Format(Language.Instance.GridContainer.DropHereQuickLootContainer, GetEnabledDisabledText(_quickLootThisContainer));
             }
 
         }
@@ -122,8 +122,8 @@ namespace ClassicUO.Game.UI.Gumps
             get
             {
                 string status = GetEnabledDisabledText(_autoSortContainer);
-                string sortModeText = _sortMode == GridSortMode.Name ? "Name" : "Graphic + Hue";
-                return $"Sort this container.<br>Left click to show sort options<br>Alt + Click to enable auto sort<br>Current sort: {sortModeText}<br>Auto sort currently {status}";
+                string sortModeText = _sortMode == GridSortMode.Name ? Language.Instance.GridContainer.SortName : Language.Instance.GridContainer.SortGraphicHue;
+                return string.Format(Language.Instance.GridContainer.SortTooltip, sortModeText, status);
             }
         }
 
@@ -212,7 +212,7 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>
         /// Generates color-coded enabled/disabled status text for tooltips
         /// </summary>
-        private static string GetEnabledDisabledText(bool isEnabled) => isEnabled ? "<basefont color=\"green\">Enabled" : "<basefont color=\"red\">Disabled";
+        private static string GetEnabledDisabledText(bool isEnabled) => isEnabled ? $"<basefont color=\"green\">{Language.Instance.GridContainer.Enabled}" : $"<basefont color=\"red\">{Language.Instance.GridContainer.Disabled}";
 
         /// <summary>
         /// Updates both background and backgroundTexture dimensions
@@ -335,7 +335,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Width = _background.Width - 18,
                 Height = 20
             };
-            _searchBox.PlaceHolderText = "Search...";
+            _searchBox.PlaceHolderText = Language.Instance.GridContainer.SearchPlaceholder;
             _searchBox.TextChanged += (sender, e) => { UpdateItems(); };
 
             _searchClearButton = new NiceButton(_borderWidth + _background.Width - 16, _borderWidth + LABEL_HEIGHT, 16, _searchBox.Height, ButtonAction.Default, "X");
@@ -347,7 +347,7 @@ namespace ClassicUO.Game.UI.Gumps
                     UIManager.SystemChat?.SetFocus();
                 }
             };
-            _searchClearButton.SetTooltip("Clear search");
+            _searchClearButton.SetTooltip(Language.Instance.GridContainer.ClearSearch);
 
             Texture2D regularGumpIcon = Client.Game.UO.Gumps.GetGump(5839).Texture;
             _openRegularGump = new GumpPic(_background.Width - 25 - _borderWidth, _borderWidth, regularGumpIcon == null ? (ushort)1209 : (ushort)5839, 0);
@@ -364,11 +364,7 @@ namespace ClassicUO.Game.UI.Gumps
             _openRegularGump.MouseExit += (sender, e) => { _openRegularGump.Graphic = regularGumpIcon == null ? (ushort)1209 : (ushort)5839; };
             _openRegularGump.SetTooltip(
                 "/c[orange]Grid Container Controls:/cd\n" +
-                "Ctrl + Click to lock an item in place\n" +
-                "Alt + Click to toggle selection for multi-move\n" +
-                "Alt + Double Click to select all similar items\n" +
-                "Shift + Click to add an item to your auto loot list\n" +
-                "Sort and single click looting can be enabled with the icons on the right side");
+                Language.Instance.GridContainer.InfoBarTooltip);
             _quickDropBackpack = new ResizableStaticPic(World.Player.Backpack.DisplayedGraphic, 20, 20)
             {
                 X = Width - _openRegularGump.Width - 20 - _borderWidth,
@@ -445,9 +441,9 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
             #region Set loot bag
-            _setLootBag = new NiceButton(0, Height - 20, 100, 20, ButtonAction.Default, "Set loot bag") { IsSelectable = false };
+            _setLootBag = new NiceButton(0, Height - 20, 100, 20, ButtonAction.Default, Language.Instance.GridContainer.SetLootBag) { IsSelectable = false };
             _setLootBag.IsVisible = _isCorpse;
-            _setLootBag.SetTooltip("For double click looting only");
+            _setLootBag.SetTooltip(Language.Instance.GridContainer.SetLootBagTooltip);
             _setLootBag.MouseUp += (s, e) =>
             {
                 GameActions.Print(world, Resources.ResGumps.TargetContainerToGrabItemsInto);
@@ -600,7 +596,7 @@ namespace ClassicUO.Game.UI.Gumps
         private ContextMenuControl GenContextMenu()
         {
             var control = new ContextMenuControl(this);
-            control.Add(new ContextMenuItemEntry("Open Original View", () =>
+            control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.OpenOriginalView, () =>
             {
                 UseOldContainerStyle = true;
                 OpenOldContainer(LocalSerial);
@@ -608,42 +604,42 @@ namespace ClassicUO.Game.UI.Gumps
 
             control.Add(new ContextMenuItemEntry
             (
-                "Open New Containers in the Original View", () =>
+                Language.Instance.GridContainer.OpenNewContainersOrigView, () =>
                 {
                     ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView = !ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView;
                     _openRegularGump.ContextMenu = GenContextMenu();
                 }, true, ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView
             ));
 
-            control.Add(new ContextMenuItemEntry("Stack Similar Items in the Original View", () =>
+            control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.StackSimilarItems, () =>
             {
                 StackNonStackableItems = !StackNonStackableItems;
                 _openRegularGump.ContextMenu = GenContextMenu();
             }, true, StackNonStackableItems));
 
-            control.Add(new ContextMenuItemEntry("Open Grid View Highlight Settings", () =>
+            control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.OpenHighlightSettings, () =>
             {
                 GridHighlightMenu.Open(World);
             }));
 
             if (Container != World.Player.Backpack)
             {
-                control.Add(new ContextMenuItemEntry("Autoloot this container", () =>
+                control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.AutolootContainer, () =>
                 {
                     AutoLootManager.Instance.ForceLootContainer(LocalSerial);
                 }));
             }
 
             // Re-applies highlight rules and colors; useful if item highlights desync after SOS loot or container refresh.
-            control.Add(new ContextMenuItemEntry("Refresh item highlights", GridHighlightData.RecheckMatchStatus));
+            control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.RefreshHighlights, GridHighlightData.RecheckMatchStatus));
 
-            control.Add(new ContextMenuItemEntry("Rename container", () =>
+            control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.RenameContainer, () =>
             {
-                new PromptPopupWindow("Rename Container", "Type in a custom name for this container.", s =>
+                new PromptPopupWindow(Language.Instance.GridContainer.RenameContainerTitle, Language.Instance.GridContainer.RenameContainerPrompt, s =>
                 {
                     _gridContainerEntry?.CustomName = s;
                     UpdateContainerNameLabel();
-                }, "Save", "Reset", () =>
+                }, Language.Instance.GridContainer.Save, Language.Instance.GridContainer.Reset, () =>
                 {
                     _gridContainerEntry?.CustomName = null;
                     UpdateContainerNameLabel();
@@ -657,7 +653,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             var control = new ContextMenuControl(this);
 
-            control.Add(new ContextMenuItemEntry("Sort by Graphic + Hue", () =>
+            control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.SortByGraphicHue, () =>
             {
                 _sortMode = GridSortMode.GraphicAndHue;
                 _sortContents.ContextMenu = GenSortContextMenu();
@@ -666,7 +662,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _gridContainerEntry.UpdateSaveDataEntry(this);
             }, true, _sortMode == GridSortMode.GraphicAndHue));
 
-            control.Add(new ContextMenuItemEntry("Sort by Name", () =>
+            control.Add(new ContextMenuItemEntry(Language.Instance.GridContainer.SortByName, () =>
             {
                 _sortMode = GridSortMode.Name;
                 _sortContents.ContextMenu = GenSortContextMenu();
@@ -1463,7 +1459,7 @@ namespace ClassicUO.Game.UI.Gumps
                     else if (Keyboard.Shift && _item != null && _profile.EnableAutoLoot && !_profile.HoldShiftForContext && !_profile.HoldShiftToSplitStack)
                     {
                         AutoLootManager.Instance.AddAutoLootEntry(_item.Graphic, _item.Hue, _item.Name);
-                        GameActions.Print(_world, $"Added this item to auto loot.");
+                        GameActions.Print(_world, Language.Instance.GridContainer.AddedToAutoLoot);
                     }
                     else if (_item != null)
                     {

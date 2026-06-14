@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
@@ -62,14 +63,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             _hit.MouseUp += TextureControlOnMouseUp;
 
-            var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, "Menu") { X = width + 44 - 43, Y = 6 };
+            var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, Language.Instance.MapGump.Menu) { X = width + 44 - 43, Y = 6 };
 
             menu.MouseUp += (s, e) =>
             {
                 menu.ContextMenu?.Show();
             };
             menu.ContextMenu = new ContextMenuControl(this);
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Show approximate location on world map", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.MapGump.ShowApproxLocation, () =>
             {
                 if (foundMapLoc)
                 {
@@ -79,7 +80,7 @@ namespace ClassicUO.Game.UI.Gumps
                         if (mapFacet != -1)
                         {
                             if (World.MapIndex != mapFacet)
-                                GameActions.Print(World, "You're on the wrong facet!", 32);
+                                GameActions.Print(World, Language.Instance.MapGump.WrongFacet, 32);
                             else
                                 map.GoToMarker(mapX, mapY, true);
                         }
@@ -88,7 +89,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Add as marker on world map", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.MapGump.AddAsMarker, () =>
             {
                 if (foundMapLoc)
                 {
@@ -104,7 +105,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Create arrow pointing to location", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.MapGump.CreateArrowToLocation, () =>
             {
                 if (foundMapLoc)
                 {
@@ -112,20 +113,20 @@ namespace ClassicUO.Game.UI.Gumps
                     if (map != null)
                     {
                         if (mapFacet != World.MapIndex)
-                            GameActions.Print(World, "You're on the wrong facet!", 32);
+                            GameActions.Print(World, Language.Instance.MapGump.WrongFacet, 32);
                         else
                             UIManager.Add(new QuestArrowGump(world, 0, mapX, mapY) { CanCloseWithRightClick = true });
                     }
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Try to pathfind", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.MapGump.TryToPathfind, () =>
             {
                 if (foundMapLoc)
                 {
                     if (mapFacet != -1)
                     {
                         if (World.MapIndex != mapFacet)
-                            GameActions.Print(World, "You're on the wrong facet!", 32);
+                            GameActions.Print(World, Language.Instance.MapGump.WrongFacet, 32);
                         else
                             World.Player.Pathfinder.WalkTo(mapX, mapY, 0, 1);
                     }
@@ -133,7 +134,7 @@ namespace ClassicUO.Game.UI.Gumps
                         World.Player.Pathfinder.WalkTo(mapX, mapY, 0, 1);
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Close", () => { Dispose(); }));
+            menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.MapGump.Close, () => { Dispose(); }));
             menu.CanCloseWithRightClick = false;
 
             Add(new GumpPic(width - 20, height - 20, 0x0139D, 0));
@@ -197,7 +198,7 @@ namespace ClassicUO.Game.UI.Gumps
                 //mapY = mapY + y;
                 foundMapLoc = true;
 
-                _hit?.SetTooltip($"Estimated loc: {mapX}, {mapY}");
+                _hit?.SetTooltip(string.Format(Language.Instance.MapGump.EstimatedLoc, mapX, mapY));
             }
         }
 

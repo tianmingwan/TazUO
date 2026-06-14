@@ -2,6 +2,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 using ClassicUO.Utility.Logging;
+using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
@@ -37,7 +38,7 @@ namespace ClassicUO.Game.Managers
                 if (mapTexture == null || mapTexture.IsDisposed)
                 {
                     Log.Error("Map texture not available - please open the world map first");
-                    GameActions.Print(World.Instance, "Please open the world map first", 0x21);
+                    GameActions.Print(World.Instance, Language.Instance.MapLanguage.PleaseOpenWorldMapFirst, 0x21);
                     return false;
                 }
             }
@@ -85,7 +86,7 @@ namespace ClassicUO.Game.Managers
                 if (mapTexture == null || mapTexture.IsDisposed)
                 {
                     Log.Warn($"Map texture not available for map {mapIndex}. Open the world map gump to generate it.");
-                    GameActions.Print(World.Instance, "Please open world map gump first", 0x21);
+                    GameActions.Print(World.Instance, Language.Instance.MapLanguage.PleaseOpenWorldMapGumpFirst, 0x21);
                     return;
                 }
 
@@ -117,12 +118,12 @@ namespace ClassicUO.Game.Managers
 
                 startTime.Stop();
                 Log.Info($"PNG conversion took {startTime.ElapsedMilliseconds}ms, size: {pngData.Length / 1024}KB");
-                GameActions.Print(World.Instance, "Map loaded in browser", 0x44);
+                GameActions.Print(World.Instance, Language.Instance.MapLanguage.MapLoadedInBrowser, 0x44);
             }
             catch (System.Exception ex)
             {
                 Log.Error($"Failed to generate map PNG: {ex.Message}");
-                GameActions.Print(World.Instance, "Failed to load map texture", 0x21);
+                GameActions.Print(World.Instance, Language.Instance.MapLanguage.FailedToLoadMapTexture, 0x21);
             }
         }
 

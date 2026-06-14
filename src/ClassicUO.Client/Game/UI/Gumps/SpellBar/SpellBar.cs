@@ -123,7 +123,7 @@ public class SpellBar : Gump
 
         NiceButton menu = new(Width - 15, 0, 15, Height, ButtonAction.Default, "+");
 
-        ContextMenuItemEntry import = new("Import preset");
+        ContextMenuItemEntry import = new(Language.Instance.Assistant.SpellBar.ImportPreset);
 
         menu.MouseUp += (sender, e) =>
         {
@@ -136,22 +136,22 @@ public class SpellBar : Gump
         };
 
         menu.ContextMenu = new ContextMenuControl(this);
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Save preset", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.Assistant.SpellBar.SavePreset, () =>
         {
-            new PromptPopupWindow("Save Preset", "Preset name", n => SpellBarManager.SaveCurrentRowPreset(n), "Save", "Cancel");
+            new PromptPopupWindow(Language.Instance.Assistant.SpellBar.SavePreset, Language.Instance.Assistant.SpellBar.PresetNameHint, n => SpellBarManager.SaveCurrentRowPreset(n), Language.Instance.UiCommons.Save, Language.Instance.UiCommons.Cancel);
         }));
         menu.ContextMenu.Add(import);
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Lock/Unlock spellbar movement", (() =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.Assistant.SpellBar.LockUnlockMovement, (() =>
         {
             IsLocked = !IsLocked;
         })));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Add row", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.Assistant.SpellBar.AddRow, () =>
         {
             SpellBarManager.SpellBarRows.Add(new SpellBarRow());
             SpellBarManager.CurrentRow = SpellBarManager.SpellBarRows.Count - 1;
             Build();
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Delete row", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.Assistant.SpellBar.DeleteRow, () =>
         {
             if (SpellBarManager.SpellBarRows.Count > 1)
             {
@@ -160,7 +160,7 @@ public class SpellBar : Gump
                 Build();
             }
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Set row color", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.Assistant.SpellBar.SetRowColor, () =>
         {
             UIManager.Add(new ModernColorPicker(World, (h) =>
             {
@@ -168,7 +168,7 @@ public class SpellBar : Gump
                 Build();
             }));
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("More options", AssistantWindow.Show));
+        menu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.Assistant.SpellBar.MoreOptions, AssistantWindow.Show));
 
         Add(menu);
     }
@@ -289,7 +289,7 @@ public class SpellBar : Gump
             }
             else
             {
-                SetTooltip("Right click to set spell");
+                SetTooltip(Language.Instance.Assistant.SpellBar.RightClickToSetSpell);
                 icon.IsVisible = false;
             }
 
@@ -356,8 +356,8 @@ public class SpellBar : Gump
             BuildHotkeyLabel();
 
             ContextMenu = new(parentGump);
-            ContextMenu.Add("Set spell", GenSpellList());
-            ContextMenu.Add(new ContextMenuItemEntry("Quick set spell", () =>
+            ContextMenu.Add(Language.Instance.Assistant.SpellBar.SetSpell, GenSpellList());
+            ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.Assistant.SpellBar.QuickSetSpell, () =>
             {
                 UIManager.Add
                 (
@@ -370,7 +370,7 @@ public class SpellBar : Gump
                     )
                 );
             }));
-            ContextMenu.Add(new ContextMenuItemEntry("Clear", () =>
+            ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.UiCommons.Clear, () =>
             {
                 SetSpell(SpellDefinition.EmptySpell, row, col);
             }));

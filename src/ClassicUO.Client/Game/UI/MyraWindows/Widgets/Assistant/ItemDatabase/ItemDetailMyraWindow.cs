@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
@@ -15,8 +16,10 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.ItemDatabase;
 public class ItemDetailMyraWindow : MyraControl
 {
     private readonly ItemInfo _item;
+    private static ItemDetailLanguage Lang => Language.Instance.Assistant.ItemDetail;
+    private static UiCommonsLanguage Common => Language.Instance.UiCommons;
 
-    public ItemDetailMyraWindow(ItemInfo item) : base($"Item Details — {item.Name}")
+    public ItemDetailMyraWindow(ItemInfo item) : base(string.Format(Lang.WindowTitle, item.Name))
     {
         _item = item;
 
@@ -35,6 +38,7 @@ public class ItemDetailMyraWindow : MyraControl
 
     private Widget BuildGraphicSection()
     {
+        var lang = Lang;
         var row = new HorizontalStackPanel { Spacing = 8 };
 
         if (_item.Graphic > 0)
@@ -42,61 +46,64 @@ public class ItemDetailMyraWindow : MyraControl
                 { Tooltip = $"Graphic: {_item.Graphic} (0x{_item.Graphic:X4})" });
 
         var infoCol = new VerticalStackPanel { Spacing = 2 };
-        infoCol.Widgets.Add(new MyraLabel($"Graphic ID: {_item.Graphic} (0x{_item.Graphic:X4})", MyraLabel.TextStyle.P));
+        infoCol.Widgets.Add(new MyraLabel(string.Format(lang.GraphicId, _item.Graphic, _item.Graphic), MyraLabel.TextStyle.P));
         infoCol.Widgets.Add(_item.Hue > 0
-            ? new MyraLabel($"Hue: {_item.Hue} (0x{_item.Hue:X4})", MyraLabel.TextStyle.P)
-            : new MyraLabel("Hue: Default", MyraLabel.TextStyle.P));
+            ? new MyraLabel(string.Format(lang.Hue, _item.Hue, _item.Hue), MyraLabel.TextStyle.P)
+            : new MyraLabel(lang.HueDefault, MyraLabel.TextStyle.P));
         row.Widgets.Add(infoCol);
         return row;
     }
 
     private Widget BuildBasicInfoSection()
     {
+        var lang = Lang;
+        var common = Common;
         var panel = new VerticalStackPanel { Spacing = 2 };
-        panel.Widgets.Add(new MyraLabel("Basic Information", MyraLabel.TextStyle.H3));
+        panel.Widgets.Add(new MyraLabel(lang.BasicInformation, MyraLabel.TextStyle.H3));
 
         if (_item.CustomName.NotNullNotEmpty())
-            panel.Widgets.Add(new MyraLabel($"Custom Name: {_item.CustomName}", MyraLabel.TextStyle.P));
+            panel.Widgets.Add(new MyraLabel(string.Format(lang.CustomName, _item.CustomName), MyraLabel.TextStyle.P));
 
-        panel.Widgets.Add(new MyraLabel($"Name: {_item.Name} (0x{_item.Serial:X8})", MyraLabel.TextStyle.P));
-        panel.Widgets.Add(new MyraLabel($"Layer: {_item.Layer} ({(int)_item.Layer})", MyraLabel.TextStyle.P));
+        panel.Widgets.Add(new MyraLabel(string.Format(lang.Name, _item.Name, _item.Serial), MyraLabel.TextStyle.P));
+        panel.Widgets.Add(new MyraLabel(string.Format(lang.Layer, _item.Layer, (int)_item.Layer), MyraLabel.TextStyle.P));
 
         TimeSpan timeAgo = DateTime.Now - _item.UpdatedTime;
-        string timeText = timeAgo.TotalDays >= 1    ? $"{timeAgo.Days}d ago"
-            : timeAgo.TotalHours >= 1               ? $"{timeAgo.Hours}h ago"
-            : timeAgo.TotalMinutes >= 1             ? $"{(int)timeAgo.TotalMinutes}m ago"
-            : "Just now";
-        panel.Widgets.Add(new MyraLabel($"Last seen: {timeText}", MyraLabel.TextStyle.P));
+        string timeText = timeAgo.TotalDays >= 1    ? string.Format(common.DaysAgo, timeAgo.Days)
+            : timeAgo.TotalHours >= 1               ? string.Format(common.HoursAgo, timeAgo.Hours)
+            : timeAgo.TotalMinutes >= 1             ? string.Format(common.MinutesAgo, (int)timeAgo.TotalMinutes)
+            : common.JustNow;
+        panel.Widgets.Add(new MyraLabel(string.Format(lang.LastSeen, timeText), MyraLabel.TextStyle.P));
 
         string charServer = _item.CharacterName;
         if (!string.IsNullOrEmpty(_item.ServerName))
-            charServer += $" (Server: {_item.ServerName})";
-        panel.Widgets.Add(new MyraLabel($"Character: {charServer}", MyraLabel.TextStyle.P));
+            charServer += string.Format($" ({lang.Server})", _item.ServerName);
+        panel.Widgets.Add(new MyraLabel(string.Format(lang.Character, charServer), MyraLabel.TextStyle.P));
 
         return panel;
     }
 
     private Widget BuildLocationSection()
     {
+        var lang = Lang;
         var panel = new VerticalStackPanel { Spacing = 2 };
-        panel.Widgets.Add(new MyraLabel("Location", MyraLabel.TextStyle.H3));
+        panel.Widgets.Add(new MyraLabel(lang.Location, MyraLabel.TextStyle.H3));
 
         if (_item.OnGround)
         {
-            panel.Widgets.Add(new MyraLabel($"On ground at {_item.X}, {_item.Y}", MyraLabel.TextStyle.P));
+            panel.Widgets.Add(new MyraLabel(string.Format(lang.OnGroundAt, _item.X, _item.Y), MyraLabel.TextStyle.P));
         }
         else
         {
-            panel.Widgets.Add(new MyraLabel("In container", MyraLabel.TextStyle.P));
+            panel.Widgets.Add(new MyraLabel(lang.InContainer, MyraLabel.TextStyle.P));
             if (_item.Container != 0)
             {
-                panel.Widgets.Add(new MyraLabel($"Container: 0x{_item.Container:X8}", MyraLabel.TextStyle.P));
+                panel.Widgets.Add(new MyraLabel(string.Format(lang.Container, _item.Container), MyraLabel.TextStyle.P));
 
                 Item? containerItem = Client.Game.UO?.World?.Items?.Get(_item.Container);
                 if (containerItem != null &&
                     containerItem.RootContainer != 0 &&
                     containerItem.RootContainer != _item.Container)
-                    panel.Widgets.Add(new MyraLabel($"Root Container: 0x{containerItem.RootContainer:X8}", MyraLabel.TextStyle.P));
+                    panel.Widgets.Add(new MyraLabel(string.Format(lang.RootContainer, containerItem.RootContainer), MyraLabel.TextStyle.P));
             }
         }
 
@@ -105,18 +112,19 @@ public class ItemDetailMyraWindow : MyraControl
 
     private Widget BuildPropertiesSection()
     {
+        var lang = Lang;
         var panel = new VerticalStackPanel { Spacing = 2 };
-        panel.Widgets.Add(new MyraLabel("Properties", MyraLabel.TextStyle.H3));
+        panel.Widgets.Add(new MyraLabel(lang.Properties, MyraLabel.TextStyle.H3));
 
         if (!string.IsNullOrEmpty(_item.Properties))
         {
             foreach (string prop in _item.Properties.Split('|'))
                 if (!string.IsNullOrWhiteSpace(prop))
-                    panel.Widgets.Add(new MyraLabel($"• {prop.Trim()}", MyraLabel.TextStyle.P));
+                    panel.Widgets.Add(new MyraLabel(string.Concat("\u2022 ", prop.Trim()), MyraLabel.TextStyle.P));
         }
         else
         {
-            panel.Widgets.Add(new MyraLabel("No properties available", MyraLabel.TextStyle.P));
+            panel.Widgets.Add(new MyraLabel(lang.NoPropertiesAvailable, MyraLabel.TextStyle.P));
         }
 
         return panel;
@@ -124,35 +132,34 @@ public class ItemDetailMyraWindow : MyraControl
 
     private Widget BuildActionsSection()
     {
+        var lang = Lang;
         var panel = new VerticalStackPanel { Spacing = 4 };
-        panel.Widgets.Add(new MyraLabel("Actions", MyraLabel.TextStyle.H3));
+        panel.Widgets.Add(new MyraLabel(lang.Actions, MyraLabel.TextStyle.H3));
 
         var row1 = new HorizontalStackPanel { Spacing = 4 };
 
-        // Use Item — only if item exists in world
         Item? worldItem = World.Instance?.Items?.Get(_item.Serial);
         if (worldItem != null && !worldItem.IsDestroyed)
         {
-            row1.Widgets.Add(new MyraButton("Use Item", () =>
+            row1.Widgets.Add(new MyraButton(lang.UseItem, () =>
                 GameActions.DoubleClick(World.Instance, _item.Serial))
-            { Tooltip = "Double-click the item to use it" });
+            { Tooltip = lang.UseItemTooltip });
         }
 
-        // Take Item — only if not already in backpack
         uint backpackSerial = Client.Game.UO?.World?.Player?.Backpack?.Serial ?? 0;
         if (_item.Container != backpackSerial)
         {
-            row1.Widgets.Add(new MyraButton("Take Item", MoveToBackpack)
-                { Tooltip = "Move the item to your backpack" });
+            row1.Widgets.Add(new MyraButton(lang.TakeItem, MoveToBackpack)
+                { Tooltip = lang.TakeItemTooltip });
         }
 
-        row1.Widgets.Add(new MyraButton("Try to Locate", TryToLocate)
-            { Tooltip = "Create a quest arrow pointing to the item's last known location" });
+        row1.Widgets.Add(new MyraButton(lang.TryToLocate, TryToLocate)
+            { Tooltip = lang.TryToLocateTooltip });
 
-        row1.Widgets.Add(new MyraButton("Set Custom Name", () =>
+        row1.Widgets.Add(new MyraButton(lang.SetCustomName, () =>
         {
             var nameBox = new MyraInputBox { Text = _item.CustomName, Width = 220 };
-            new MyraDialog("Set Custom Name", nameBox, ok =>
+            new MyraDialog(lang.SetCustomNameTitle, nameBox, ok =>
             {
                 if (!ok) return;
                 _item.CustomName = nameBox.Text ?? "";
@@ -171,22 +178,22 @@ public class ItemDetailMyraWindow : MyraControl
 
         if (!_item.OnGround && _item.Container != 0)
         {
-            row2.Widgets.Add(new MyraButton("View Container", () =>
+            row2.Widgets.Add(new MyraButton(lang.ViewContainer, () =>
                 OpenContainerDetail(_item.Container))
-            { Tooltip = "View the container's database entry" });
+            { Tooltip = lang.ViewContainerTooltip });
 
             Item? cont = Client.Game.UO?.World?.Items?.Get(_item.Container);
             if (cont != null &&
                 cont.RootContainer != 0 &&
                 cont.RootContainer != _item.Container)
             {
-                row2.Widgets.Add(new MyraButton("View Root Container", () =>
+                row2.Widgets.Add(new MyraButton(lang.ViewRootContainer, () =>
                     OpenContainerDetail(cont.RootContainer))
-                { Tooltip = "View the root container's database entry" });
+                { Tooltip = lang.ViewRootContainerTooltip });
             }
         }
 
-        row2.Widgets.Add(new MyraButton("Close", () => _disposeRequested = true));
+        row2.Widgets.Add(new MyraButton(lang.Close, () => _disposeRequested = true));
         panel.Widgets.Add(row2);
 
         return panel;

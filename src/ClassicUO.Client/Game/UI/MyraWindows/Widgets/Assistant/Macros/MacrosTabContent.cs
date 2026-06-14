@@ -21,7 +21,6 @@ public static class MacrosTabContent
     private static readonly Dictionary<MacroType, int> _macroTypeToDisplayIndex;
 
     private static Action? _cleanupAction;
-    /// <summary>Call when the owning window closes to unsubscribe any active hotkey-capture handler and re-enable hotkeys.</summary>
     public static void Cleanup() => _cleanupAction?.Invoke();
 
     static MacrosTabContent()
@@ -43,11 +42,13 @@ public static class MacrosTabContent
 
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.Macros;
+        var common = Language.Instance.UiCommons;
+
         Profile? profile = ProfileManager.CurrentProfile;
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
+            return new MyraLabel(lang.ProfileNotLoaded, MyraLabel.TextStyle.P);
 
-        // ── State ────────────────────────────────────────────────────────────
         Macro? selectedMacro = null;
         string filterText = "";
 
@@ -56,13 +57,11 @@ public static class MacrosTabContent
         SDL.SDL_Keymod capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
         Action<string>? captureHandler = null;
 
-        // ── Panel references ─────────────────────────────────────────────────
         var macroListPanel = new VerticalStackPanel { Spacing = 1 };
         var editorPanel    = new VerticalStackPanel { Spacing = 4 };
         var hotkeyRow      = new HorizontalStackPanel { Spacing = 4 };
         var actionsPanel   = new VerticalStackPanel { Spacing = 2 };
 
-        // ── Helpers ──────────────────────────────────────────────────────────
         void MarkDirty() => World.Instance?.Macros?.Save();
 
         string GetHotkeyString(Macro macro)
@@ -82,7 +81,7 @@ public static class MacrosTabContent
             if (macro.WheelScroll)
                 return KeysTranslator.GetMouseWheel(macro.WheelUp, mod);
 
-            return "None";
+            return lang.NoneHotkey;
         }
 
         void CancelCapture()
@@ -109,7 +108,7 @@ public static class MacrosTabContent
             Macro? existing = World.Instance?.Macros?.FindMacro(capturedKey, alt, ctrl, shift);
             if (existing != null && existing != selectedMacro)
             {
-                GameActions.Print(World.Instance, $"Hotkey already used by macro: {existing.Name}", 32);
+                GameActions.Print(World.Instance, string.Format(lang.HotkeyAlreadyUsed, existing.Name), 32);
                 CancelCapture();
                 return;
             }
@@ -126,7 +125,6 @@ public static class MacrosTabContent
             MarkDirty();
         }
 
-        // ── BuildMacroList ────────────────────────────────────────────────────
         void BuildMacroList()
         {
             macroListPanel.Widgets.Clear();
@@ -142,15 +140,15 @@ public static class MacrosTabContent
 
             if (display.Count == 0)
             {
-                macroListPanel.Widgets.Add(new MyraLabel("No macros.", MyraLabel.TextStyle.P));
+                macroListPanel.Widgets.Add(new MyraLabel(lang.NoMacros, MyraLabel.TextStyle.P));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Fill("Name"),
-                GridColumnInfo.Auto("Hotkey"),
-                GridColumnInfo.Auto("Edit")
+                GridColumnInfo.Fill(lang.ColName),
+                GridColumnInfo.Auto(lang.ColHotkey),
+                GridColumnInfo.Auto(lang.ColEdit)
             );
 
             int dataRow = 1;
@@ -160,7 +158,7 @@ public static class MacrosTabContent
 
                 grid.AddWidget(new MyraLabel(macro.Name, MyraLabel.TextStyle.P), dataRow, 0);
                 grid.AddWidget(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P), dataRow, 1);
-                grid.AddWidget(new MyraButton("Edit", () =>
+                grid.AddWidget(new MyraButton(common.Edit, () =>
                 {
                     selectedMacro = captured;
                     BuildMacroList();
@@ -172,7 +170,6 @@ public static class MacrosTabContent
             macroListPanel.Widgets.Add(grid);
         }
 
-        // ── BuildEditor ───────────────────────────────────────────────────────
         void BuildEditor()
         {
             CancelCapture();
@@ -180,15 +177,14 @@ public static class MacrosTabContent
 
             if (selectedMacro == null)
             {
-                editorPanel.Widgets.Add(new MyraLabel("Select a macro to edit.", MyraLabel.TextStyle.H3));
+                editorPanel.Widgets.Add(new MyraLabel(lang.SelectMacroToEdit, MyraLabel.TextStyle.H3));
                 return;
             }
 
             Macro macro = selectedMacro;
 
-            // Name row
             var nameRow = new HorizontalStackPanel { Spacing = 2 };
-            nameRow.Widgets.Add(new MyraLabel("Macro Name:", MyraLabel.TextStyle.P));
+            nameRow.Widgets.Add(new MyraLabel(lang.MacroName, MyraLabel.TextStyle.P));
             var nameBox = new MyraInputBox { Text = macro.Name, Width = 200 };
             nameBox.TextChangedByUser += (_, _) =>
             {
@@ -199,13 +195,11 @@ public static class MacrosTabContent
             editorPanel.Widgets.Add(nameRow);
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            // Hotkey row (rebuilt dynamically)
             BuildHotkeyRow();
             editorPanel.Widgets.Add(hotkeyRow);
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            // Create Macro Button
-            editorPanel.Widgets.Add(new MyraButton("Create Macro Button", () =>
+            editorPanel.Widgets.Add(new MyraButton(lang.CreateMacroButton, () =>
             {
                 foreach (IGui? gump in UIManager.Gumps)
                     if (gump is MacroButtonGump mbg && mbg.TheMacro == macro)
@@ -217,11 +211,11 @@ public static class MacrosTabContent
                 macroButtonGump.CenterXInViewPort();
                 macroButtonGump.CenterYInViewPort();
                 UIManager.Add(macroButtonGump);
-            }) { Tooltip = "Create a draggable macro button for this macro" });
+            }) { Tooltip = lang.CreateMacroButtonTooltip });
 
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            editorPanel.Widgets.Add(new MyraLabel("Actions:", MyraLabel.TextStyle.P));
+            editorPanel.Widgets.Add(new MyraLabel(lang.Actions, MyraLabel.TextStyle.P));
 
             BuildActionsPanel();
             editorPanel.Widgets.Add(new ScrollViewer { MaxHeight = 250, Content = actionsPanel });
@@ -229,7 +223,7 @@ public static class MacrosTabContent
             editorPanel.Widgets.Add(new MyraSpacer(10, 1));
 
             var bottomRow = new HorizontalStackPanel { Spacing = 2 };
-            bottomRow.Widgets.Add(new MyraButton("Add Action", () =>
+            bottomRow.Widgets.Add(new MyraButton(lang.AddAction, () =>
             {
                 MacroObject newAction = Macro.Create(MacroType.Say);
                 var scanAction = (MacroObject)macro.Items;
@@ -250,10 +244,10 @@ public static class MacrosTabContent
                 BuildActionsPanel();
             }));
 
-            bottomRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete Macro", () =>
+            bottomRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(lang.DeleteMacro, () =>
             {
-                new MyraDialog($"Delete '{macro.Name}'?",
-                    new MyraLabel($"Are you sure you want to delete '{macro.Name}'?", MyraLabel.TextStyle.P),
+                new MyraDialog(string.Format(lang.DeleteMacroConfirmTitle, macro.Name),
+                    new MyraLabel(string.Format(lang.DeleteMacroConfirmMessage, macro.Name), MyraLabel.TextStyle.P),
                     ok =>
                     {
                         if (!ok) return;
@@ -263,16 +257,15 @@ public static class MacrosTabContent
                         BuildMacroList();
                         BuildEditor();
                     });
-            }) { Tooltip = "Permanently delete this macro" }));
+            }) { Tooltip = lang.DeleteMacroTooltip }));
 
             editorPanel.Widgets.Add(bottomRow);
         }
 
-        // ── BuildHotkeyRow ────────────────────────────────────────────────────
         void BuildHotkeyRow()
         {
             hotkeyRow.Widgets.Clear();
-            hotkeyRow.Widgets.Add(new MyraLabel("Hotkey:", MyraLabel.TextStyle.P));
+            hotkeyRow.Widgets.Add(new MyraLabel(lang.HotkeyLabel, MyraLabel.TextStyle.P));
 
             if (selectedMacro == null) return;
             Macro macro = selectedMacro;
@@ -281,18 +274,18 @@ public static class MacrosTabContent
             {
                 string captureDisplay = capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN
                     ? KeysTranslator.TryGetKey(capturedKey, capturedMod)
-                    : "Listening...";
+                    : lang.Listening;
                 hotkeyRow.Widgets.Add(new MyraLabel(captureDisplay, MyraLabel.TextStyle.P));
 
                 if (capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN)
-                    hotkeyRow.Widgets.Add(new MyraButton("Apply", () =>
+                    hotkeyRow.Widgets.Add(new MyraButton(common.Apply, () =>
                     {
                         ApplyCapturedHotkey();
                         BuildHotkeyRow();
                         BuildMacroList();
                     }));
 
-                hotkeyRow.Widgets.Add(new MyraButton("Cancel", () =>
+                hotkeyRow.Widgets.Add(new MyraButton(common.Cancel, () =>
                 {
                     CancelCapture();
                     BuildHotkeyRow();
@@ -302,7 +295,7 @@ public static class MacrosTabContent
             {
                 hotkeyRow.Widgets.Add(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P));
 
-                hotkeyRow.Widgets.Add(new MyraButton("Capture", () =>
+                hotkeyRow.Widgets.Add(new MyraButton(lang.Capture, () =>
                 {
                     isListening = true;
                     capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
@@ -311,7 +304,6 @@ public static class MacrosTabContent
 
                     captureHandler = hotkeyStr =>
                     {
-                        // Parse: "CTRL+SHIFT+SDLK_F1" → keycode + mod
                         SDL.SDL_Keycode key = SDL.SDL_Keycode.SDLK_UNKNOWN;
                         SDL.SDL_Keymod mod  = SDL.SDL_Keymod.SDL_KMOD_NONE;
                         foreach (string part in hotkeyStr.Split('+'))
@@ -341,9 +333,9 @@ public static class MacrosTabContent
 
                     Keyboard.KeyDownEvent += captureHandler;
                     BuildHotkeyRow();
-                }) { Tooltip = "Click then press a key to assign as hotkey" });
+                }) { Tooltip = lang.CaptureTooltip });
 
-                hotkeyRow.Widgets.Add(new MyraButton("Clear", () =>
+                hotkeyRow.Widgets.Add(new MyraButton(lang.Clear, () =>
                 {
                     macro.Key               = SDL.SDL_Keycode.SDLK_UNKNOWN;
                     macro.MouseButton       = MouseButtonType.None;
@@ -353,11 +345,10 @@ public static class MacrosTabContent
                     MarkDirty();
                     BuildHotkeyRow();
                     BuildMacroList();
-                }) { Tooltip = "Remove the hotkey from this macro" });
+                }) { Tooltip = lang.ClearTooltip });
             }
         }
 
-        // ── BuildActionsPanel ─────────────────────────────────────────────────
         void BuildActionsPanel()
         {
             actionsPanel.Widgets.Clear();
@@ -376,7 +367,6 @@ public static class MacrosTabContent
                 var actionRow = new HorizontalStackPanel { Spacing = 2 };
                 actionRow.Widgets.Add(new MyraLabel($"{capturedIndex + 1}.", MyraLabel.TextStyle.P));
 
-                // Action type ComboBox
 #pragma warning disable CS0612, CS0618
                 var typeCombo = new ComboBox
                 {
@@ -403,10 +393,8 @@ public static class MacrosTabContent
 #pragma warning restore CS0612, CS0618
                 actionRow.Widgets.Add(typeCombo);
 
-                // Sub-type input
                 if (capturedAction.SubMenuType == 1)
                 {
-                    // Dropdown sub-type
                     int subCount = 0, subOffset = 0;
                     Macro.GetBoundByCode(capturedAction.Code, ref subCount, ref subOffset);
 
@@ -439,7 +427,6 @@ public static class MacrosTabContent
                 }
                 else if (capturedAction.SubMenuType == 2)
                 {
-                    // Text input
                     string currentText = capturedAction.HasString()
                         ? ((MacroObjectString)capturedAction).Text
                         : "";
@@ -453,7 +440,6 @@ public static class MacrosTabContent
                         }
                         else
                         {
-                            // Replace with string version
                             var strAction = new MacroObjectString(capturedAction.Code, capturedAction.SubCode, newText);
                             strAction.Next = capturedAction.Next;
                             var scan = (MacroObject)macro.Items;
@@ -471,13 +457,12 @@ public static class MacrosTabContent
                     actionRow.Widgets.Add(textBox);
                 }
 
-                // Remove button
-                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
+                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(lang.RemoveAction, () =>
                 {
                     macro.Remove(capturedAction);
                     MarkDirty();
                     BuildActionsPanel();
-                }) { Tooltip = "Remove this action" }));
+                }) { Tooltip = lang.RemoveActionTooltip }));
 
                 actionsPanel.Widgets.Add(actionRow);
 
@@ -486,15 +471,14 @@ public static class MacrosTabContent
             }
 
             if (actionIndex == 0)
-                actionsPanel.Widgets.Add(new MyraLabel("No actions. Click 'Add Action' to add one.", MyraLabel.TextStyle.H3));
+                actionsPanel.Widgets.Add(new MyraLabel(lang.NoActions, MyraLabel.TextStyle.H3));
         }
 
-        // ── Toolbar ───────────────────────────────────────────────────────────
         var toolbar = new HorizontalStackPanel { Spacing = 2 };
 
-        toolbar.Widgets.Add(new MyraButton("Add", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.Add, () =>
         {
-            string baseName = "New Macro";
+            string baseName = lang.NewMacro;
             string macroName = baseName;
             int counter = 1;
             while (World.Instance?.Macros?.GetAllMacros().Any(m => m.Name == macroName) == true)
@@ -509,7 +493,7 @@ public static class MacrosTabContent
             BuildEditor();
         }));
 
-        toolbar.Widgets.Add(new MyraButton("Move Up", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.MoveUp, () =>
         {
             if (selectedMacro == null) return;
             World.Instance?.Macros?.MoveMacroUp(selectedMacro);
@@ -517,7 +501,7 @@ public static class MacrosTabContent
             BuildMacroList();
         }));
 
-        toolbar.Widgets.Add(new MyraButton("Move Down", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.MoveDown, () =>
         {
             if (selectedMacro == null) return;
             World.Instance?.Macros?.MoveMacroDown(selectedMacro);
@@ -525,7 +509,7 @@ public static class MacrosTabContent
             BuildMacroList();
         }));
 
-        toolbar.Widgets.Add(new MyraButton("Import", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.Import, () =>
         {
             string? xml = Utility.Clipboard.GetClipboardText();
             if (xml.NotNullNotEmpty() && World.Instance?.Macros?.ImportFromXml(xml) == true)
@@ -533,17 +517,17 @@ public static class MacrosTabContent
                 BuildMacroList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid macro export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import macros from clipboard (must have a valid export)" });
+            GameActions.Print(lang.ClipboardNoValidExport, Constants.HUE_ERROR);
+        }) { Tooltip = lang.ImportTooltip });
 
-        toolbar.Widgets.Add(new MyraButton("Export", () =>
+        toolbar.Widgets.Add(new MyraButton(lang.Export, () =>
         {
             World.Instance?.Macros?.GetXmlExport()?.CopyToClipboard();
             int cnt = World.Instance?.Macros?.GetAllMacros().Count ?? 0;
-            GameActions.Print($"Exported {cnt} macro(s) to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export all macros to clipboard" });
+            GameActions.Print(string.Format(lang.ExportedMacros, cnt), Constants.HUE_SUCCESS);
+        }) { Tooltip = lang.ExportTooltip });
 
-        var filterBox = new MyraInputBox { HintText = "Filter...", Width = 150 };
+        var filterBox = new MyraInputBox { HintText = common.Filter, Width = 150 };
         filterBox.TextChangedByUser += (_, _) =>
         {
             filterText = filterBox.Text ?? "";
@@ -551,7 +535,6 @@ public static class MacrosTabContent
         };
         toolbar.Widgets.Add(filterBox);
 
-        // ── Main layout ───────────────────────────────────────────────────────
         var mainArea = new HorizontalStackPanel { Spacing = 4 };
 
         var listScroll = new ScrollViewer { MaxHeight = 450, Content = macroListPanel };

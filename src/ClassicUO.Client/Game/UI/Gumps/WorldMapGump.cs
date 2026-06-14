@@ -353,7 +353,7 @@ public class WorldMapGump : ResizableGump
             true,
             _showPartyMembers
         );
-        _options["show_corpse"] = new ContextMenuItemEntry("Show my Corpse", () => { _showCorpse = !_showCorpse; SaveSettings(); }, true, _showCorpse);
+        _options["show_corpse"] = new ContextMenuItemEntry(Language.Instance.WorldMapGump.ShowMyCorpse, () => { _showCorpse = !_showCorpse; SaveSettings(); }, true, _showCorpse);
 
         _options["show_mobiles"] = new ContextMenuItemEntry(ResGumps.ShowMobiles, () => { _showMobiles = !_showMobiles; SaveSettings(); }, true, _showMobiles);
 
@@ -388,9 +388,9 @@ public class WorldMapGump : ResizableGump
 
         _options["add_marker_on_player"] = new ContextMenuItemEntry(ResGumps.AddMarkerOnPlayer, () => AddMarkerOnPlayer());
 
-        _options["open_web_map"] = new ContextMenuItemEntry("Open Web Map (Browser)", GameActions.OpenWorldMapWebWindow);
+        _options["open_web_map"] = new ContextMenuItemEntry(Language.Instance.WorldMapGump.OpenWebMap, GameActions.OpenWorldMapWebWindow);
 
-        _options["auto_start_web_map"] = new ContextMenuItemEntry("Auto start web map", () =>
+        _options["auto_start_web_map"] = new ContextMenuItemEntry(Language.Instance.WorldMapGump.AutoStartWebMap, () =>
         {
             ProfileManager.CurrentProfile.WebMapAutoStart = !ProfileManager.CurrentProfile.WebMapAutoStart;
             if (!MapWebServerManager.Instance.IsRunning)
@@ -1857,7 +1857,7 @@ public class WorldMapGump : ResizableGump
             catch (Exception e)
             {
                 Log.Error($"Error saving user marker: {e}");
-                GameActions.Print(_world, "Failed to save user markers", 32);
+                GameActions.Print(_world, Language.Instance.WorldMapGump.FailedSaveUserMarkers, 32);
             }
 
         var mapMarker = new WMapMarker
@@ -1919,7 +1919,7 @@ public class WorldMapGump : ResizableGump
              catch (Exception e)
              {
                  Log.Error($"Error saving user marker: {e}");
-                 GameActions.Print(_world, "Failed to save user markers", 32);
+                 GameActions.Print(_world, Language.Instance.WorldMapGump.FailedSaveUserMarkers, 32);
              }
         }
 
@@ -2032,7 +2032,7 @@ public class WorldMapGump : ResizableGump
         {
             if (batcher.ClipBegin(gX, gY, gWidth, gHeight))
             {
-                ReadOnlySpan<char> str = "Please wait, I'm making the map file...".AsSpan();
+                ReadOnlySpan<char> str = Language.Instance.WorldMapGump.MakingMapFile.AsSpan();
                 //str = str[..(str.Length - (int)_mapLoadingTime % 3)];
 
                 //if (Time.Ticks > _mapLoadingTime)

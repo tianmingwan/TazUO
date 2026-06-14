@@ -362,6 +362,9 @@ public class TrueTypeLoader
 
             if (_fonts.TryGetValue(EmbeddedFontNames.ROBOTO_BOLD, out FontSystem robotoBoldSystem))
                 robotoBoldSystem.AddFont(cjkFontBytes);
+
+            if (_fonts.TryGetValue(EmbeddedFontNames.IBM_PLEX, out FontSystem ibmPlexSystem))
+                ibmPlexSystem.AddFont(cjkFontBytes);
         }
     }
 

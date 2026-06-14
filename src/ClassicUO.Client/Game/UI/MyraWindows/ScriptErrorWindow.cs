@@ -1,4 +1,5 @@
 #nullable enable
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -12,7 +13,7 @@ public class ScriptErrorWindow : MyraControl
 {
     private static int _id = 1;
 
-    public ScriptErrorWindow(ScriptErrorDetails errorDetails) : base("Script Error " + _id++)
+    public ScriptErrorWindow(ScriptErrorDetails errorDetails) : base(string.Format(Language.Instance.Scripting.ScriptErrorTitle, _id++))
     {
         Build(errorDetails);
         _rootWindow.UpdateArrange();
@@ -25,18 +26,18 @@ public class ScriptErrorWindow : MyraControl
     {
         var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
-        root.Widgets.Add(new MyraLabel("Your script encountered an error, here's what we know:", MyraLabel.TextStyle.P));
+        root.Widgets.Add(new MyraLabel(Language.Instance.Scripting.ScriptErrorHeader, MyraLabel.TextStyle.P));
 
         // Clickable red error message
         var errorLabel = new MyraLabel(errorDetails.ErrorMsg, MyraLabel.TextStyle.P)
         {
             TextColor = Color.Red,
-            Tooltip = "Click to copy to clipboard"
+            Tooltip = Language.Instance.Scripting.ClickToCopyToClipboard
         };
         errorLabel.TouchDown += (_, _) =>
         {
             SDL3.SDL.SDL_SetClipboardText(errorDetails.ErrorMsg);
-            GameActions.Print($"Copied error to clipboard.", Constants.HUE_SUCCESS);
+            GameActions.Print(Language.Instance.Scripting.CopiedErrorToClipboard, Constants.HUE_SUCCESS);
         };
         root.Widgets.Add(errorLabel);
 
@@ -45,7 +46,7 @@ public class ScriptErrorWindow : MyraControl
         {
             ScriptErrorLocation loc = errorDetails.Locations[i];
 
-            root.Widgets.Add(new MyraLabel($"File: {loc.FileName}  |  Line: {loc.LineNumber}", MyraLabel.TextStyle.P));
+            root.Widgets.Add(new MyraLabel(string.Format(Language.Instance.Scripting.FileLineFormat, loc.FileName, loc.LineNumber), MyraLabel.TextStyle.P));
 
             if (!string.IsNullOrEmpty(loc.LineContent))
             {
@@ -61,8 +62,8 @@ public class ScriptErrorWindow : MyraControl
         }
 
         var btnRow = new HorizontalStackPanel { Spacing = 4 };
-        btnRow.Widgets.Add(new MyraButton("Edit", () => new ScriptEditorWindow(errorDetails.Script)));
-        btnRow.Widgets.Add(new MyraButton("Edit Externally", () =>
+        btnRow.Widgets.Add(new MyraButton(Language.Instance.Scripting.Edit_, () => new ScriptEditorWindow(errorDetails.Script)));
+        btnRow.Widgets.Add(new MyraButton(Language.Instance.Scripting.EditExternally, () =>
             ClassicUO.Utility.FileSystemHelper.OpenFileWithDefaultApp(errorDetails.Script.FullPath)));
         root.Widgets.Add(btnRow);
 

@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using Myra.Graphics2D.UI;
@@ -10,6 +11,8 @@ public static class FriendsListTabContent
 {
     public static Widget Build()
     {
+        var lang = Language.Instance.Assistant.FriendsList;
+
         var friendsListPanel = new VerticalStackPanel { Spacing = 4 };
 
         void BuildFriendsList()
@@ -20,17 +23,17 @@ public static class FriendsListTabContent
 
             if (friends.Count == 0)
             {
-                friendsListPanel.Widgets.Add(new MyraLabel("No friends added yet.", MyraLabel.TextStyle.P));
+                friendsListPanel.Widgets.Add(new MyraLabel(lang.NoFriendsAddedYet, MyraLabel.TextStyle.P));
                 return;
             }
 
-            friendsListPanel.Widgets.Add(new MyraLabel("Current Friends:", MyraLabel.TextStyle.H2));
+            friendsListPanel.Widgets.Add(new MyraLabel(lang.CurrentFriends, MyraLabel.TextStyle.H2));
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Numeric("Serial"),
-                GridColumnInfo.Fill("Name", 2),
-                GridColumnInfo.Auto("Date Added"),
+                GridColumnInfo.Numeric(lang.ColSerial),
+                GridColumnInfo.Fill(lang.ColName, 2),
+                GridColumnInfo.Auto(lang.ColDateAdded),
                 GridColumnInfo.Auto("")
             );
 
@@ -39,10 +42,10 @@ public static class FriendsListTabContent
             {
                 FriendEntry f = friends[i];
 
-                grid.AddWidget(new MyraLabel(f.Serial != 0 ? f.Serial.ToString() : "N/A", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), row, 0);
-                grid.AddWidget(new MyraLabel(f.Name ?? "Unknown", MyraLabel.TextStyle.P), row, 1);
+                grid.AddWidget(new MyraLabel(f.Serial != 0 ? f.Serial.ToString() : lang.NA, MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), row, 0);
+                grid.AddWidget(new MyraLabel(f.Name ?? lang.Unknown, MyraLabel.TextStyle.P), row, 1);
                 grid.AddWidget(new MyraLabel(f.DateAdded.ToString("yyyy-MM-dd"), MyraLabel.TextStyle.P), row, 2);
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton(Language.Instance.UiCommons.Remove, () =>
                 {
                     bool removed = f.Serial != 0
                         ? FriendsListManager.Instance.RemoveFriend(f.Serial)
@@ -50,7 +53,7 @@ public static class FriendsListTabContent
 
                     if (removed)
                     {
-                        GameActions.Print(World.Instance, $"Removed {f.Name} from friends list");
+                        GameActions.Print(World.Instance, string.Format(lang.RemovedFromFriendsList, f.Name));
                         BuildFriendsList();
                     }
                 })), row, 3);
@@ -64,27 +67,27 @@ public static class FriendsListTabContent
         BuildFriendsList();
 
         var root = new VerticalStackPanel { Spacing = 6 };
-        root.Widgets.Add(new MyraLabel("Manage your friends list.", MyraLabel.TextStyle.H3));
-        root.Widgets.Add(new MyraButton("Add by Target", () =>
+        root.Widgets.Add(new MyraLabel(lang.ManageFriendsList, MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraButton(lang.AddByTarget, () =>
         {
-            GameActions.Print(World.Instance, "Target a player to add to friends list");
+            GameActions.Print(World.Instance, lang.TargetPlayerToAdd);
             World.Instance.TargetManager.SetTargeting(targeted =>
             {
                 if (targeted is Mobile mobile)
                 {
                     if (FriendsListManager.Instance.AddFriend(mobile))
                     {
-                        GameActions.Print(World.Instance, $"Added {mobile.Name} to friends list");
+                        GameActions.Print(World.Instance, string.Format(lang.AddedToFriendsList, mobile.Name));
                         BuildFriendsList();
                     }
                     else
                     {
-                        GameActions.Print(World.Instance, $"Could not add {mobile.Name} — already in friends list");
+                        GameActions.Print(World.Instance, string.Format(lang.CouldNotAddAlreadyInList, mobile.Name));
                     }
                 }
                 else
                 {
-                    GameActions.Print(World.Instance, "Invalid target — must be a player");
+                    GameActions.Print(World.Instance, lang.InvalidTargetMustBePlayer);
                 }
             });
         }));
