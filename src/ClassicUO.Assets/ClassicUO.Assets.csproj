@@ -6,12 +6,12 @@
 
   <ItemGroup>
     <None Remove="gumpartassets\*.png" />
-    <None Remove="fonts\*.ttf" />
+    <None Remove="fonts\*.*" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="gumpartassets\*.png" />
-    <EmbeddedResource Include="fonts\*.ttf" />
+    <EmbeddedResource Include="fonts\*.*" />
   </ItemGroup>
 
   <ItemGroup>
