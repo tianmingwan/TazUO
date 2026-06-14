@@ -60,6 +60,7 @@ public static class EmbeddedFontNames
     public const string KINGTHINGS_EXETER = "Kingthings Exeter";
     public const string LEAGUE_SPARTAN_BOLD = "LeagueSpartan-Bold";
     public const string UO_UNICODE = "uo-unicode-1";
+    public const string NOTO_SANS_SC = "NotoSansSC-Regular";
 
     /// <summary>
     ///     The names of all embedded fonts
@@ -325,6 +326,8 @@ public class TrueTypeLoader
             .Where(name => name.StartsWith(fontAssetFolder))
             .ToArray();
 
+        byte[] cjkFontBytes = null;
+
         foreach (string resourceName in resourceNames)
         {
             Stream stream = assembly.GetManifestResourceStream(resourceName);
@@ -346,7 +349,19 @@ public class TrueTypeLoader
                 var fontSystem = new FontSystem(settings);
                 fontSystem.AddFont(fileBytes);
                 _fonts[fName] = fontSystem;
+
+                if (fName == EmbeddedFontNames.NOTO_SANS_SC)
+                    cjkFontBytes = fileBytes;
             }
+        }
+
+        if (cjkFontBytes != null)
+        {
+            if (_fonts.TryGetValue(EmbeddedFontNames.ROBOTO, out FontSystem robotoSystem))
+                robotoSystem.AddFont(cjkFontBytes);
+
+            if (_fonts.TryGetValue(EmbeddedFontNames.ROBOTO_BOLD, out FontSystem robotoBoldSystem))
+                robotoBoldSystem.AddFont(cjkFontBytes);
         }
     }
 
