@@ -34,7 +34,16 @@ namespace ClassicUO.Configuration
 
         public static void Load()
         {
-            string uiLang = Settings.GlobalSettings?.UILanguage ?? "EN";
+            string uiLang;
+            try
+            {
+                uiLang = Settings.GlobalSettings?.UILanguage ?? "EN";
+            }
+            catch (NullReferenceException)
+            {
+                uiLang = "EN";
+            }
+
             _loadedLanguageCode = uiLang;
             string path = GetLanguageFilePath(uiLang);
 
