@@ -151,6 +151,17 @@ namespace ClassicUO.Configuration
             return sb.ToString();
         }
 
+        public static void ExtractEmbeddedResource(string resourceName, string destPath)
+        {
+            Assembly assembly = typeof(TazLang).Assembly;
+            using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream == null)
+                return;
+
+            using FileStream dest = File.Create(destPath);
+            stream.CopyTo(dest);
+        }
+
         private static string Escape(string value)
         {
             if (!value.Contains('\\') && !value.Contains('\n'))
