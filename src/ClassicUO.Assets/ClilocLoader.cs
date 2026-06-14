@@ -15,6 +15,7 @@ namespace ClassicUO.Assets
     {
         private string _cliloc;
         private readonly Dictionary<int, string> _entries = new Dictionary<int, string>();
+        private bool _convertToSimplified;
 
         public ClilocLoader(UOFileManager fileManager) : base(fileManager)
         {
@@ -22,9 +23,17 @@ namespace ClassicUO.Assets
 
         public void Load(string lang)
         {
+            _convertToSimplified = false;
+
             if (string.IsNullOrEmpty(lang))
             {
                 lang = "enu";
+            }
+
+            if (string.Equals(lang, "CHS", StringComparison.InvariantCultureIgnoreCase))
+            {
+                _convertToSimplified = true;
+                lang = "CHT";
             }
 
             _cliloc = $"Cliloc.{lang}";
@@ -33,7 +42,7 @@ namespace ClassicUO.Assets
             if (!File.Exists(FileManager.GetUOFilePath(_cliloc)))
             {
                 Log.Warn($"'{_cliloc}' not found. Rolled back to Cliloc.enu");
-
+                _convertToSimplified = false;
                 _cliloc = "Cliloc.enu";
             }
 
@@ -85,7 +94,10 @@ namespace ClassicUO.Assets
                 int number = reader.ReadInt32LE();
                 byte flag = reader.ReadUInt8();
                 short length = reader.ReadInt16LE();
-                string text = string.Intern(reader.ReadUTF8(length));
+                string text = reader.ReadUTF8(length);
+                if (_convertToSimplified)
+                    text = ChineseCharConverter.TraditionalToSimplified(text);
+                text = string.Intern(text);
 
                 _entries[number] = text;
             }
@@ -96,7 +108,8 @@ namespace ClassicUO.Assets
         public string GetString(int number)
         {
             _entries.TryGetValue(number, out string text);
-
+            if (_convertToSimplified && text != null)
+                return ChineseCharConverter.TraditionalToSimplified(text);
             return text;
         }
 
@@ -289,6 +302,9 @@ namespace ClassicUO.Assets
                 baseCliloc = sb.ToString();
 
                 sb.Dispose();
+
+                if (_convertToSimplified)
+                    baseCliloc = ChineseCharConverter.TraditionalToSimplified(baseCliloc);
 
                 if (capitalize)
                 {
