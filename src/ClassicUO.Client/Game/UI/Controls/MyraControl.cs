@@ -336,6 +336,9 @@ public class MyraControl : IGui
     public void InvokeTextInput(string c) { }
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
+    public void InvokeTextEditing(string text, int start, int length) { }
+
+    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeControllerButtonUp(SDL.SDL_GamepadButton button) { }
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>

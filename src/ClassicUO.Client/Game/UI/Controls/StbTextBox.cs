@@ -285,6 +285,9 @@ namespace ClassicUO.Game.UI.Controls
         protected bool _is_writing;
         protected bool _leftWasDown, _fromServer;
         protected RenderedText _rendererText, _rendererCaret, _rendererPlaceholder;
+        private string _preeditText;
+        private int _preeditStart;
+        private int _preeditLength;
         public string PlaceHolderText
         {
             get
@@ -813,6 +816,13 @@ namespace ClassicUO.Game.UI.Controls
         }
 
         public void AppendText(string text) => Stb.Paste(text);
+
+        public override void InvokeTextEditing(string text, int start, int length)
+        {
+            _preeditText = text;
+            _preeditStart = start;
+            _preeditLength = length;
+        }
 
 
         protected override void OnTextInput(string c)

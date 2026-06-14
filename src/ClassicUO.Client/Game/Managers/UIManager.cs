@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using ClassicUO.Game.UI;
+using static SDL3.SDL;
 
 namespace ClassicUO.Game.Managers
 {
@@ -112,9 +113,24 @@ namespace ClassicUO.Game.Managers
                     if (value != null && value.AcceptKeyboardInput)
                     {
                         if (!value.IsFocused)
-                        {
                             value.OnFocusEnter();
+
+                        if (GameController.StaticWindow != null)
+                        {
+                            var rect = new SDL_Rect
+                            {
+                                x = value.ScreenCoordinateX,
+                                y = value.ScreenCoordinateY,
+                                w = value.Width,
+                                h = value.Height
+                            };
+                            SDL_SetTextInputArea(GameController.StaticWindow.Handle, ref rect, 0);
                         }
+                    }
+                    else if (GameController.StaticWindow != null)
+                    {
+                        var emptyRect = new SDL_Rect();
+                        SDL_SetTextInputArea(GameController.StaticWindow.Handle, ref emptyRect, 0);
                     }
                 }
             }

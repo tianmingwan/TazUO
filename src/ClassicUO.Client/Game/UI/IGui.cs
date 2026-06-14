@@ -62,6 +62,7 @@ public interface IGui
     void InvokeKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod);
     void InvokeKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod);
     void InvokeTextInput(string c);
+    void InvokeTextEditing(string text, int start, int length);
     void InvokeControllerButtonUp(SDL.SDL_GamepadButton button);
     void InvokeControllerButtonDown(SDL.SDL_GamepadButton button);
     void InvokeMouseDown(Point position, MouseButtonType button);

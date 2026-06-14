@@ -41,6 +41,7 @@ namespace ClassicUO
         private SDL_EventFilter _filter;
 
         private bool _ignoreNextTextInput;
+        public static GameWindow StaticWindow { get; private set; }
         private readonly float[] _intervalFixedUpdate = new float[2];
         private double _totalElapsed, _currentFpsTime;
         private uint _totalFrames;
@@ -79,6 +80,7 @@ namespace ClassicUO
             Window.ClientSizeChanged += WindowOnClientSizeChanged;
             Window.AllowUserResizing = true;
             Window.Title = DefaultWindowTitle;
+            StaticWindow = Window;
             IsMouseVisible = Settings.GlobalSettings.RunMouseInASeparateThread;
 
             IsFixedTimeStep = false; // Settings.GlobalSettings.FixedTimeStep;
@@ -819,6 +821,20 @@ namespace ClassicUO
                     }
 
                     break;
+
+                case SDL_EventType.SDL_EVENT_TEXT_EDITING when Scene is not null:
+                {
+                    string editingText = Marshal.PtrToStringUTF8((IntPtr)sdlEvent->edit.text);
+                    int start = sdlEvent->edit.start;
+                    int length = sdlEvent->edit.length;
+
+                    if (!string.IsNullOrEmpty(editingText))
+                    {
+                        UIManager.KeyboardFocusControl?.InvokeTextEditing(editingText, start, length);
+                    }
+
+                    break;
+                }
 
                 case SDL_EventType.SDL_EVENT_TEXT_INPUT when Scene is not null:
                     if (_ignoreNextTextInput)

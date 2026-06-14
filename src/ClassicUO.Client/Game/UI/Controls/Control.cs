@@ -742,6 +742,8 @@ namespace ClassicUO.Game.UI.Controls
 
     public void InvokeTextInput(string c) => OnTextInput(c);
 
+    public virtual void InvokeTextEditing(string text, int start, int length) { }
+
     public void InvokeKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
     {
         OnKeyDown(key, mod);
