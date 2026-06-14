@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.Json;
 
 namespace ClassicUO.Configuration
@@ -29,13 +30,30 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         public static Language Instance { get; private set; } = new();
 
+        private static string _loadedLanguageCode = "EN";
+
         public static void Load()
         {
-            if (File.Exists(languageFilePath))
+            string uiLang = Settings.GlobalSettings?.UILanguage ?? "EN";
+            _loadedLanguageCode = uiLang;
+            string path = GetLanguageFilePath(uiLang);
+
+            if (File.Exists(path))
             {
-                Language f = JsonSerializer.Deserialize(File.ReadAllText(languageFilePath), LanguageJsonContext.Default.Language);
-                Instance = f;
-                Save(); //To update language file with new additions as needed
+                Instance = JsonSerializer.Deserialize(File.ReadAllText(path), LanguageJsonContext.Default.Language);
+                Save();
+            }
+            else if (!uiLang.Equals("EN", StringComparison.OrdinalIgnoreCase))
+            {
+                string enPath = GetLanguageFilePath("EN");
+                if (File.Exists(enPath))
+                {
+                    Instance = JsonSerializer.Deserialize(File.ReadAllText(enPath), LanguageJsonContext.Default.Language);
+                }
+                else
+                {
+                    CreateNewLanguageFile();
+                }
             }
             else
             {
@@ -48,16 +66,22 @@ namespace ClassicUO.Configuration
             Directory.CreateDirectory(Path.Combine(CUOEnviroment.ExecutablePath, "Data"));
 
             string defaultLanguage = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, defaultLanguage);
+            File.WriteAllText(GetLanguageFilePath(_loadedLanguageCode), defaultLanguage);
         }
 
         private static void Save()
         {
             string language = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, language);
+            File.WriteAllText(GetLanguageFilePath(_loadedLanguageCode), language);
         }
 
-        private static string languageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
+        private static string GetLanguageFilePath(string code)
+        {
+            string fileName = code.Equals("EN", StringComparison.OrdinalIgnoreCase)
+                ? "Language.json"
+                : $"Language.{code}.json";
+            return Path.Combine(CUOEnviroment.ExecutablePath, "Data", fileName);
+        }
     }
 
     public class ModernOptionsGumpLanguage

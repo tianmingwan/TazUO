@@ -51,6 +51,10 @@ namespace ClassicUO.Configuration
             if (!File.Exists(zhPath))
                 LangIniSerializer.ExtractEmbeddedResource("ClassicUO.Configuration.language.ZH.ini", zhPath);
 
+            string zhLangPath = Path.Combine(dataDir, "Language.ZH.json");
+            if (!File.Exists(zhLangPath))
+                LangIniSerializer.ExtractEmbeddedResource("ClassicUO.Configuration.Language.ZH.json", zhLangPath);
+
             if (!File.Exists(enPath))
             {
                 Log.Error("Failed to load language file");
