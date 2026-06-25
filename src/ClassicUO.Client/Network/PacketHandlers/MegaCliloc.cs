@@ -39,8 +39,9 @@ internal static class MegaCliLoc
             entity = world.Items.Get(serial);
         }
 
-        var list = new List<(int, string, int)>();
+        var list = new List<(int, string, string, int)>();
         int totalLength = 0;
+        int totalEnglishLength = 0;
 
         while (p.Position < p.Length)
         {
@@ -60,6 +61,12 @@ internal static class MegaCliLoc
 
             if (str == null)
                 continue;
+
+            // Build the original English version of the same string so scripts
+            // can match on it regardless of the active UI language.
+            string englishStr = Client.Game.UO.FileManager.Clilocs.TranslateEnglish(cliloc, argument, true);
+            if (englishStr == null)
+                englishStr = str;
 
             int argcliloc = 0;
 
@@ -102,9 +109,10 @@ internal static class MegaCliLoc
                     break;
                 }
 
-            list.Add((cliloc, str, argcliloc));
+            list.Add((cliloc, str, englishStr, argcliloc));
 
             totalLength += str.Length;
+            totalEnglishLength += englishStr.Length;
         }
 
         Item container = null;
@@ -124,6 +132,8 @@ internal static class MegaCliLoc
 
         string name = string.Empty;
         string data = string.Empty;
+        string englishName = string.Empty;
+        string englishData = string.Empty;
         int namecliloc = 0;
 
         if (list.Count != 0)
@@ -131,18 +141,23 @@ internal static class MegaCliLoc
             Span<char> span = stackalloc char[totalLength];
             var sb = new ValueStringBuilder(span);
 
-            foreach ((int, string, int) s in list)
+            Span<char> englishSpan = stackalloc char[totalEnglishLength];
+            var englishSb = new ValueStringBuilder(englishSpan);
+
+            foreach ((int, string, string, int) s in list)
             {
                 string str = s.Item2;
+                string englishStr = s.Item3;
 
                 if (first)
                 {
                     name = str;
+                    englishName = englishStr;
 
                     if (entity != null && !SerialHelper.IsMobile(serial))
                     {
                         entity.Name = str;
-                        namecliloc = s.Item3 > 0 ? s.Item3 : s.Item1;
+                        namecliloc = s.Item4 > 0 ? s.Item4 : s.Item1;
                     }
 
                     first = false;
@@ -153,15 +168,22 @@ internal static class MegaCliLoc
                         sb.Append('\n');
 
                     sb.Append(str);
+
+                    if (englishSb.Length != 0)
+                        englishSb.Append('\n');
+
+                    englishSb.Append(englishStr);
                 }
             }
 
             data = sb.ToString();
+            englishData = englishSb.ToString();
 
             sb.Dispose();
+            englishSb.Dispose();
         }
 
-        world.OPL.Add(serial, revision, name, data, namecliloc);
+        world.OPL.Add(serial, revision, name, data, namecliloc, englishName, englishData);
 
         if (inBuyList && container != null && SerialHelper.IsValid(container.Serial))
         {

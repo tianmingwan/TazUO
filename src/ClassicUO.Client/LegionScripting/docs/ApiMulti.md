@@ -1,11 +1,11 @@
 ---
 title: ApiMulti
-description:  Represents a Python-accessible multi-tile structure (e.g., player buildings or player ships) in the game world.  Inherits spatial and visual data from <see cref="ApiGameObject"/> . 
+description:  Represents a Python-accessible multi-tile structure (e.g., player buildings or player ships) in the game world.  Inherits spatial and visual data from `ApiGameObject` . 
 ---
 
 ## Class Description
  Represents a Python-accessible multi-tile structure (e.g., player buildings or player ships) in the game world.
- Inherits spatial and visual data from <see cref="ApiGameObject"/> .
+ Inherits spatial and visual data from `ApiGameObject` .
 
 
 ## Properties

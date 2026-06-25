@@ -10,7 +10,12 @@ namespace ClassicUO.Utility
 
     public static class ChineseCharConverter
     {
-        private static readonly Dictionary<char, char> _traditionalToSimplified = new();
+        // Maps a traditional char to its full simplified form. Most entries are a single
+        // char, but CJK Extension B / rare characters are encoded as a UTF-16 surrogate
+        // PAIR (two char code units). Storing the whole string — not just values[0][0] —
+        // is critical: taking only the first code unit splits the pair and produces a
+        // lone high surrogate, which crashes FontStashSharp's ConvertToUtf32 later.
+        private static readonly Dictionary<char, string> _traditionalToSimplified = new();
 
         static ChineseCharConverter()
         {
@@ -38,7 +43,9 @@ namespace ClassicUO.Utility
                     string[] values = parts[1].Split(' ');
                     if (traditional.Length > 0 && values.Length > 0 && values[0].Length > 0)
                     {
-                        _traditionalToSimplified[traditional[0]] = values[0][0];
+                        // Keep the entire simplified value (values[0]). For surrogate-pair
+                        // targets this is 2 chars; for BMP targets it is 1 char.
+                        _traditionalToSimplified[traditional[0]] = values[0];
                     }
                 }
             }
@@ -56,9 +63,13 @@ namespace ClassicUO.Utility
             var sb = new StringBuilder(text.Length);
             foreach (char c in text)
             {
-                sb.Append(_traditionalToSimplified.TryGetValue(c, out char simplified) ? simplified : c);
+                if (_traditionalToSimplified.TryGetValue(c, out string simplified))
+                    sb.Append(simplified);
+                else
+                    sb.Append(c);
             }
             return sb.ToString();
         }
     }
+
 }

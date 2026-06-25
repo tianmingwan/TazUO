@@ -125,8 +125,9 @@ public class ApiItem : ApiEntity
     /// </summary>
     /// <param name="wait">True or false to wait for name and props</param>
     /// <param name="timeout">Timeout in seconds</param>
+    /// <param name="englishOnly">When True, returns the original English (Cliloc.enu) name and properties instead of the localized text. Use this when matching against hard-coded English strings so scripts keep working under any language.</param>
     /// <returns>Item name and properties, or empty string if we don't have them.</returns>
-    public string NameAndProps(bool wait = false, int timeout = 10)
+    public string NameAndProps(bool wait = false, int timeout = 10, bool englishOnly = false)
     {
         if (wait)
         {
@@ -140,7 +141,14 @@ public class ApiItem : ApiEntity
 
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
-            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
+            bool got;
+            string n, d;
+            if (englishOnly)
+                got = Client.Game.UO.World.OPL.TryGetEnglishNameAndData(Serial, out n, out d);
+            else
+                got = Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out n, out d);
+
+            if (got)
             {
                 return n + "\n" + d;
             }

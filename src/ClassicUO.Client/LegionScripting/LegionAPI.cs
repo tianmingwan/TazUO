@@ -2533,12 +2533,25 @@ namespace ClassicUO.LegionScripting
         ///   if "An Exotic Fish" in data:
         ///     API.SysMsg("Found an exotic fish!")
         /// ```
+        /// <remarks>
+        /// Under a localized client (e.g. Chinese/CHS) the returned string is
+        /// localized, so matching against hard-coded English text like
+        /// <c>"An Exotic Fish"</c> will fail. Pass <paramref name="englishOnly"/>
+        /// = <c>True</c> to get the original English (Cliloc.enu) name and
+        /// properties, which is stable regardless of the UI language:
+        /// ```py
+        /// data = API.ItemNameAndProps(0x12345678, True, 10, englishOnly=True)
+        /// if "An Exotic Fish" in data:
+        ///     API.SysMsg("Found it!")
+        /// ```
+        /// </remarks>
         /// </summary>
         /// <param name="serial"></param>
         /// <param name="wait">True or false to wait for name and props</param>
         /// <param name="timeout">Timeout in seconds</param>
+        /// <param name="englishOnly">When True, returns the original English (Cliloc.enu) name and properties instead of the localized text. Use this when matching against hard-coded English strings so scripts keep working under any language.</param>
         /// <returns>Item name and properties, or empty if we don't have them.</returns>
-        public string ItemNameAndProps(uint serial, bool wait = false, int timeout = 10)
+        public string ItemNameAndProps(uint serial, bool wait = false, int timeout = 10, bool englishOnly = false)
         {
             if (wait)
             {
@@ -2553,7 +2566,14 @@ namespace ClassicUO.LegionScripting
             return OnMain
             (() =>
                 {
-                    if (World.OPL.TryGetNameAndData(serial, out string n, out string d))
+                    bool got;
+                    string n, d;
+                    if (englishOnly)
+                        got = World.OPL.TryGetEnglishNameAndData(serial, out n, out d);
+                    else
+                        got = World.OPL.TryGetNameAndData(serial, out n, out d);
+
+                    if (got)
                     {
                         return n + "\n" + d;
                     }
@@ -2562,6 +2582,41 @@ namespace ClassicUO.LegionScripting
                 }
             );
         }
+
+        /// <summary>
+        /// Returns the raw cliloc string for the given cliloc number.
+        /// Pass <paramref name="englishOnly"/> = <c>True</c> to get the original
+        /// English (Cliloc.enu) string, ignoring the active UI language.
+        /// Useful for matching against stable English text under a localized client.
+        /// Example:
+        /// ```py
+        /// API.SysMsg(API.GetClilocString(1042931))                # localized
+        /// API.SysMsg(API.GetClilocString(1042931, englishOnly=True))  # english
+        /// ```
+        /// </summary>
+        /// <param name="cliloc">The cliloc number.</param>
+        /// <param name="englishOnly">When True, return the English (Cliloc.enu) string.</param>
+        /// <returns>The cliloc string, or empty string if not found.</returns>
+        public string GetClilocString(int cliloc, bool englishOnly = false) => OnMain(() =>
+        {
+            string s = englishOnly
+                ? Client.Game.UO.FileManager.Clilocs.GetEnglishString(cliloc)
+                : Client.Game.UO.FileManager.Clilocs.GetString(cliloc);
+
+            return s ?? string.Empty;
+        });
+
+        /// <summary>
+        /// Returns the cliloc number used as the item's name, or 0 if unknown.
+        /// Combine with <see cref="GetClilocString(int,bool)"/> to resolve the
+        /// name in any language without relying on the localized tooltip text.
+        /// Example:
+        /// ```py
+        /// namecliloc = API.GetItemNameCliloc(serial)
+        /// english_name = API.GetClilocString(namecliloc, englishOnly=True)
+        /// ```
+        /// </summary>
+        public int GetItemNameCliloc(uint serial) => OnMain(() => World.OPL.GetNameCliloc(serial));
 
         /// <summary>
         /// Requests Object Property List (OPL) data for the specified serials.

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using System.Collections.Generic;
+using ClassicUO.Assets;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
@@ -23,6 +24,8 @@ namespace ClassicUO.Game.UI.Controls
         private bool _entered;
         private bool _hasBeenClicked; //Use in python api
         private readonly RenderedText[] _fontTexture;
+        private readonly TextBox[] _ttfTexture;
+        private readonly bool _useTTF;
         private ushort _normal, _pressed, _over;
         private Vector3 hueVector;
         private int hue;
@@ -36,13 +39,15 @@ namespace ClassicUO.Game.UI.Controls
             byte font = 0,
             bool isunicode = true,
             ushort normalHue = ushort.MaxValue,
-            ushort hoverHue = ushort.MaxValue
+            ushort hoverHue = ushort.MaxValue,
+            bool useTTF = false
         )
         {
             ButtonID = buttonID;
             _normal = normal;
             _pressed = pressed;
             _over = over;
+            _useTTF = useTTF;
 
             ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(normal);
             if (gumpInfo.Texture == null)
@@ -59,15 +64,29 @@ namespace ClassicUO.Game.UI.Controls
 
             if (!string.IsNullOrEmpty(caption) && normalHue != ushort.MaxValue)
             {
-                _fontTexture = new RenderedText[2];
-
                 _caption = caption;
 
-                _fontTexture[0] = RenderedText.Create(caption, FontHue, font, isunicode);
-
-                if (hoverHue != ushort.MaxValue)
+                if (useTTF)
                 {
-                    _fontTexture[1] = RenderedText.Create(caption, HueHover, font, isunicode);
+                    _ttfTexture = new TextBox[2];
+                    int nHue = FontHue == 0 ? 0xFFFF : FontHue;
+                    _ttfTexture[0] = TextBox.GetOne(caption, TrueTypeLoader.EMBEDDED_FONT, 14, nHue, TextBox.RTLOptions.Default());
+
+                    if (hoverHue != ushort.MaxValue)
+                    {
+                        int hHue = HueHover == 0 ? 0xFFFF : HueHover;
+                        _ttfTexture[1] = TextBox.GetOne(caption, TrueTypeLoader.EMBEDDED_FONT, 14, hHue, TextBox.RTLOptions.Default());
+                    }
+                }
+                else
+                {
+                    _fontTexture = new RenderedText[2];
+                    _fontTexture[0] = RenderedText.Create(caption, FontHue, font, isunicode);
+
+                    if (hoverHue != ushort.MaxValue)
+                    {
+                        _fontTexture[1] = RenderedText.Create(caption, HueHover, font, isunicode);
+                    }
                 }
             }
 
@@ -218,21 +237,43 @@ namespace ClassicUO.Game.UI.Controls
 
             if (!string.IsNullOrEmpty(_caption))
             {
-                RenderedText textTexture = _fontTexture[_entered ? 1 : 0];
-
-                if (FontCenter)
+                if (_useTTF && _ttfTexture != null)
                 {
-                    int yoffset = IsClicked ? 1 : 0;
+                    TextBox textTexture = _ttfTexture[_entered && _ttfTexture[1] != null ? 1 : 0];
 
-                    textTexture.Draw(
-                        batcher,
-                        x + ((Width - textTexture.Width) >> 1),
-                        y + yoffset + ((Height - textTexture.Height) >> 1)
-                    );
+                    if (FontCenter)
+                    {
+                        int yoffset = IsClicked ? 1 : 0;
+
+                        textTexture?.Draw(
+                            batcher,
+                            x + ((Width - textTexture.Width) >> 1),
+                            y + yoffset + ((Height - textTexture.Height) >> 1)
+                        );
+                    }
+                    else
+                    {
+                        textTexture?.Draw(batcher, x, y);
+                    }
                 }
-                else
+                else if (_fontTexture != null)
                 {
-                    textTexture.Draw(batcher, x, y);
+                    RenderedText textTexture = _fontTexture[_entered ? 1 : 0];
+
+                    if (FontCenter)
+                    {
+                        int yoffset = IsClicked ? 1 : 0;
+
+                        textTexture.Draw(
+                            batcher,
+                            x + ((Width - textTexture.Width) >> 1),
+                            y + yoffset + ((Height - textTexture.Height) >> 1)
+                        );
+                    }
+                    else
+                    {
+                        textTexture.Draw(batcher, x, y);
+                    }
                 }
             }
 
@@ -311,6 +352,14 @@ namespace ClassicUO.Game.UI.Controls
                 foreach (RenderedText t in _fontTexture)
                 {
                     t?.Destroy();
+                }
+            }
+
+            if (_ttfTexture != null)
+            {
+                foreach (TextBox t in _ttfTexture)
+                {
+                    t?.Dispose();
                 }
             }
 

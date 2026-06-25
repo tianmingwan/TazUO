@@ -22,7 +22,8 @@ namespace ClassicUO.Game.UI.Controls
             byte font = 0,
             ushort color = 0,
             bool isunicode = true,
-            int maxWidth = 0
+            int maxWidth = 0,
+            bool useTTF = false
         ) : base
         (
             inactive,
@@ -31,7 +32,8 @@ namespace ClassicUO.Game.UI.Controls
             font,
             color,
             isunicode,
-            maxWidth
+            maxWidth,
+            useTTF
         )
         {
             GroupIndex = group;

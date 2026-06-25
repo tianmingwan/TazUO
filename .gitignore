@@ -268,3 +268,26 @@ external/FNA
 external/MP3Sharp
 .claude/settings.local.json
 .DS_Store
+
+# --- Local junk / build artifacts / personal config (do not commit) ---
+# Build logs
+msbuild.binlog
+*.binlog
+
+# Personal/runtime config (contains credentials)
+settings.json
+
+# Temp/stray files
+nul
+\$null
+old_converter.cs
+old_converter.txt
+
+# Editor/agent working dirs
+.opencode/
+
+# Generated localization data (regenerated at runtime)
+Data/
+
+# Archives
+*.rar

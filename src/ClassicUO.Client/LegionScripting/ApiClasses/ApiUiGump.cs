@@ -15,6 +15,24 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 public class ApiUiGump(LegionAPI api)
 {
     /// <summary>
+    /// Returns true if the text contains any non-ASCII characters (e.g. CJK).
+    /// Used to decide whether to render control labels with the TTF pipeline
+    /// (which has NotoSansSC CJK fallback) instead of the UO bitmap unicode fonts.
+    /// </summary>
+    private static bool HasNonAscii(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return false;
+
+        foreach (char c in text)
+        {
+            if (c > 127)
+                return true;
+        }
+
+        return false;
+    }
+    /// <summary>
     /// Get a blank gump.
     /// Example:
     /// ```py
@@ -102,7 +120,7 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="isChecked">Default false, set to true if you want this checkbox checked on creation</param>
     /// <returns>The checkbox</returns>
     public ApiUiCheckbox CreateGumpCheckbox(string text = "", ushort hue = 0, bool isChecked = false) =>
-        new ApiUiCheckbox(new Checkbox(0x00D2, 0x00D3, text, color: hue) { CanMove = true, IsChecked = isChecked });
+        new ApiUiCheckbox(new Checkbox(0x00D2, 0x00D3, text, color: hue, useTTF: HasNonAscii(text)) { CanMove = true, IsChecked = isChecked });
 
     /// <summary>
     /// Create a label for a gump.
@@ -193,7 +211,7 @@ public class ApiUiGump(LegionAPI api)
     /// <returns></returns>
     public ApiUiButton CreateGumpButton(string text = "", ushort hue = 996, ushort normal = 0x00EF, ushort pressed = 0x00F0, ushort hover = 0x00EE)
     {
-        var b = new Button(0, normal, pressed, hover, caption: text, normalHue: hue, hoverHue: hue);
+        var b = new Button(0, normal, pressed, hover, caption: text, normalHue: hue, hoverHue: hue, useTTF: HasNonAscii(text));
 
         return new ApiUiButton(b);
     }
@@ -242,7 +260,7 @@ public class ApiUiGump(LegionAPI api)
     /// <returns></returns>
     public ApiUiRadioButton CreateGumpRadioButton(string text = "", int group = 0, ushort inactive = 0x00D0, ushort active = 0x00D1, ushort hue = 0xFFFF, bool isChecked = false)
     {
-        var rb = new RadioButton(group, inactive, active, text, color: hue);
+        var rb = new RadioButton(group, inactive, active, text, color: hue, useTTF: HasNonAscii(text));
         rb.IsChecked = isChecked;
         return new ApiUiRadioButton(rb);
     }

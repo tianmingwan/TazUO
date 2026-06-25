@@ -264,8 +264,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     continue;
                 }
 
-                // Check if OPL data exists
-                if (!World.OPL.TryGetNameAndData(ser, out _, out _))
+                // Check if OPL data exists (use English path so rarity/property
+                // matching against the hard-coded English keyword set works under
+                // any UI language, e.g. "Legendary Artifact" under a CHS client).
+                if (!World.OPL.TryGetEnglishNameAndData(ser, out _, out _))
                 {
                     // OPL data not available yet, requeue for later processing
                     _reusableRequeueItems.Add(ser);
@@ -274,7 +276,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                 // OPL data exists, remove from hashset and create ItemPropertiesData
                 _queuedItems.Remove(ser);
-                _reusableItemData.Add(new ItemPropertiesData(World, item));
+                _reusableItemData.Add(new ItemPropertiesData(World, item, null, true));
             }
 
             // Process items with OPL data

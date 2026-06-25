@@ -1,11 +1,11 @@
 ---
 title: ApiMobile
-description:  Represents a Python-accessible mobile (NPC, creature, or player character).   Inherits entity and positional data from <see cref="ApiEntity"/> .  
+description:  Represents a Python-accessible mobile (NPC, creature, or player character).   Inherits entity and positional data from `ApiEntity` .  
 ---
 
 ## Class Description
  Represents a Python-accessible mobile (NPC, creature, or player character).
- Inherits entity and positional data from <see cref="ApiEntity"/> .
+ Inherits entity and positional data from `ApiEntity` .
 
 
 ## Properties
@@ -141,7 +141,7 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 ## Methods
 ### NameAndProps
-`(wait, timeout)`
+`(wait, timeout, englishOnly)`
  Gets the mobile name and properties (tooltip text).
  This returns the name and properties in a single string. You can split it by newline if you want to separate them.
 
@@ -152,6 +152,7 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 | --- | --- | --- | --- |
 | `wait` | `bool` | ✅ Yes | True or false to wait for name and props |
 | `timeout` | `int` | ✅ Yes | Timeout in seconds |
+| `englishOnly` | `bool` | ✅ Yes | When True, returns the original English (Cliloc.enu) name and properties instead of the localized text. Use this when matching against hard-coded English strings so scripts keep working under any language. |
 
 **Return Type:** `string`
 

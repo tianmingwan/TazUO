@@ -129,6 +129,11 @@ namespace ClassicUO.Game.UI.Controls
             if (Options.StrokeEffect && !text.StartsWith("/es"))
                 text = $"/es[{getStrokeSize}]" + text;
 
+            // Defense-in-depth: strip lone/unpaired UTF-16 surrogates that would crash
+            // FontStashSharp's ConvertToUtf32 during MeasureString (observed on cliloc /
+            // chat strings produced by the CHT->CHS conversion or sent by the server).
+            text = StringHelper.RemoveLoneSurrogates(text);
+
             if (_rtl == null || _rtl.Text != text || _rtl.Width != Options.Width)
                 _rtl = new RichTextLayout
                 {

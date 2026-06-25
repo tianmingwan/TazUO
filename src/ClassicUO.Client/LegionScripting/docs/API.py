@@ -111,7 +111,7 @@ class ApiItem(ApiEntity):
         """
         pass
 
-    def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
+    def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10, englishOnly: "bool" = False) -> "str":
         """
          Gets the item name and properties (tooltip text).
          This returns the name and properties in a single string. You can split it by newline if you want to separate them.
@@ -199,7 +199,7 @@ class ApiMobile(ApiEntity):
     Mount: ApiItem = None
     __class__: str = None
 
-    def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
+    def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10, englishOnly: "bool" = False) -> "str":
         """
          Gets the mobile name and properties (tooltip text).
          This returns the name and properties in a single string. You can split it by newline if you want to separate them.
@@ -975,9 +975,9 @@ class ModernNineSliceGump(NineSliceGump):
     def SetResizeCallback(self, callback: "Any") -> None:
         """
          Registers a callback to be called when the gump is resized.
-         <remarks>
+        
          Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
-         </remarks>
+        
         """
         pass
 
@@ -1148,7 +1148,7 @@ def OnHotKey(key: "str", callback: "Any" = None) -> None:
      ```py
      API.OnHotKey("SHIFT+A")
      ```
-     The <paramref name="key"/> can include modifiers (CTRL, SHIFT, ALT),
+     The `key` can include modifiers (CTRL, SHIFT, ALT),
      for example: "CTRL+SHIFT+F1" or "ALT+A".
     
     """
@@ -2249,7 +2249,7 @@ def Logout() -> None:
     """
     pass
 
-def ItemNameAndProps(serial: "int", wait: "bool" = False, timeout: "int" = 10) -> "str":
+def ItemNameAndProps(serial: "int", wait: "bool" = False, timeout: "int" = 10, englishOnly: "bool" = False) -> "str":
     """
      Gets item name and properties.
      This returns the name and properties in a single string. You can split it by new line if you want to separate them.
@@ -2260,6 +2260,46 @@ def ItemNameAndProps(serial: "int", wait: "bool" = False, timeout: "int" = 10) -
        API.SysMsg("Item data: " + data)
        if "An Exotic Fish" in data:
          API.SysMsg("Found an exotic fish!")
+     ```
+    
+     Under a localized client (e.g. Chinese/CHS) the returned string is
+     localized, so matching against hard-coded English text like
+     `"An Exotic Fish"` will fail. Pass `englishOnly`
+     = `True` to get the original English (Cliloc.enu) name and
+     properties, which is stable regardless of the UI language:
+     ```py
+     data = API.ItemNameAndProps(0x12345678, True, 10, englishOnly=True)
+     if "An Exotic Fish" in data:
+         API.SysMsg("Found it!")
+     ```
+    
+    """
+    pass
+
+def GetClilocString(cliloc: "int", englishOnly: "bool" = False) -> "str":
+    """
+     Returns the raw cliloc string for the given cliloc number.
+     Pass `englishOnly` = `True` to get the original
+     English (Cliloc.enu) string, ignoring the active UI language.
+     Useful for matching against stable English text under a localized client.
+     Example:
+     ```py
+     API.SysMsg(API.GetClilocString(1042931))                # localized
+     API.SysMsg(API.GetClilocString(1042931, englishOnly=True))  # english
+     ```
+    
+    """
+    pass
+
+def GetItemNameCliloc(serial: "int") -> "int":
+    """
+     Returns the cliloc number used as the item's name, or 0 if unknown.
+     Combine with `GetClilocString` to resolve the
+     name in any language without relying on the localized tooltip text.
+     Example:
+     ```py
+     namecliloc = API.GetItemNameCliloc(serial)
+     english_name = API.GetClilocString(namecliloc, englishOnly=True)
      ```
     
     """

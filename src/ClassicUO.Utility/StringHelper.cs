@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text;
 using SDL3;
 
 namespace ClassicUO.Utility
@@ -202,6 +203,64 @@ namespace ClassicUO.Utility
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsSafeChar(int c) => c >= 0x20 && c < 0xFFFE;
+
+        /// <summary>
+        /// Removes lone (unpaired) UTF-16 surrogates that would crash FontStashSharp's
+        /// ConvertToUtf32 with an ArgumentOutOfRangeException. A high surrogate must be
+        /// followed by a low surrogate; a low surrogate must follow a high one. Any
+        /// surrogate that is not part of a valid pair is replaced with U+FFFD.
+        ///
+        /// Used as defense-in-depth on any text about to be measured/drawn by the font
+        /// renderer (e.g. cliloc strings / chat coming from the server).
+        /// </summary>
+        public static string RemoveLoneSurrogates(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return str;
+
+            // Fast path: no surrogate code units at all.
+            bool hasSurrogate = false;
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (char.IsSurrogate(str[i]))
+                {
+                    hasSurrogate = true;
+                    break;
+                }
+            }
+
+            if (!hasSurrogate)
+                return str;
+
+            var sb = new StringBuilder(str.Length);
+            for (int i = 0; i < str.Length; i++)
+            {
+                char c = str[i];
+                if (char.IsHighSurrogate(c) && i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+                {
+                    sb.Append(c);
+                    sb.Append(str[i + 1]);
+                    i++; // consume the pair
+                }
+                else if (char.IsLowSurrogate(c) && sb.Length > 0 && char.IsHighSurrogate(sb[sb.Length - 1]))
+                {
+                    // handled by the high-surrogate branch above; reaching here means lone low
+                    sb.Append('\uFFFD');
+                }
+                else if (char.IsSurrogate(c))
+                {
+                    // lone high (no low after) or lone low (no high before)
+                    sb.Append('\uFFFD');
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString();
+        }
+
 
         public static void AddSpaceBeforeCapital(string[] str, bool checkAcronyms = true)
         {

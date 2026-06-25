@@ -122,6 +122,17 @@ namespace ClassicUO.Utility
                     string json = File.ReadAllText(filePath);
                     obj = (T)JsonSerializer.Deserialize(json, jsonTypeInfo);
 
+                    // Treat a null result as a load failure. A file whose content is the JSON
+                    // literal "null" (or a corrupt payload that deserializes to null) would
+                    // otherwise be reported as a successful load with obj == null, overwriting
+                    // the caller's valid default and causing NullReferenceExceptions downstream
+                    // (e.g. JournalFilterManager._filters). Fall through to backups instead.
+                    if (obj == null)
+                    {
+                        Log.Warn($"Deserialized null from {filePath}; treating as load failure");
+                        continue;
+                    }
+
                     return true;
                 }
                 catch (Exception e)

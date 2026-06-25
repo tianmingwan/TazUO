@@ -11,8 +11,11 @@ namespace ClassicUO.Game.Data
             Type = type;
             Graphic = graphic;
             Timer = (timer <= 0 ? 0xFFFF_FFFF : Time.Ticks + timer * 1000);
-            Text = text;
-            Title = title;
+            // ClilocLoader.Translate can return null when a cliloc is missing;
+            // downstream consumers (e.g. ImprovedBuffGump.AddBuff) call .Replace
+            // on Title, so coerce null -> "" here to avoid NullReferenceException.
+            Text = text ?? string.Empty;
+            Title = title ?? string.Empty;
         }
 
         public bool Equals(BuffIcon other) => other != null && Type == other.Type;

@@ -1,6 +1,7 @@
 ﻿using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Utility.Logging;
 using System;
 using System.Collections.Generic;
 using System.Xml;
@@ -36,7 +37,18 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (icon != null)
             {
-                var coolDownBar = new CoolDownBar(World, TimeSpan.FromMilliseconds(icon.Timer - Time.Ticks), icon.Title.Replace("<br>", " "), ProfileManager.CurrentProfile.ImprovedBuffBarHue, 0, 0, icon.Graphic, icon.Type, true);
+                // Defensive: ClilocLoader.Translate can return null when a buff's
+                // titleCliloc/descriptionCliloc is missing from the cliloc table.
+                // BuffIcon already coerces null -> "", but guard here too and log
+                // so we can trace which cliloc is missing if it recurs.
+                string title = icon.Title;
+                if (string.IsNullOrEmpty(title))
+                {
+                    Log.Warn($"ImprovedBuffGump.AddBuff: empty title for buff type {icon.Type} (graphic {icon.Graphic}) - cliloc missing?");
+                    title = string.Empty;
+                }
+
+                var coolDownBar = new CoolDownBar(World, TimeSpan.FromMilliseconds(icon.Timer - Time.Ticks), title.Replace("<br>", " "), ProfileManager.CurrentProfile.ImprovedBuffBarHue, 0, 0, icon.Graphic, icon.Type, true);
                 coolDownBar.SetTooltip(icon.Text);
                 BuffBarManager.AddCoolDownBar(coolDownBar, _direction, _box);
                 _box.Add(coolDownBar);

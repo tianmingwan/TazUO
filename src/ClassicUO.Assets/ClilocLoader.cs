@@ -15,6 +15,7 @@ namespace ClassicUO.Assets
     {
         private string _cliloc;
         private readonly Dictionary<int, string> _entries = new Dictionary<int, string>();
+        private readonly Dictionary<int, string> _englishEntries = new Dictionary<int, string>();
         private bool _convertToSimplified;
 
         public ClilocLoader(UOFileManager fileManager) : base(fileManager)
@@ -64,16 +65,42 @@ namespace ClassicUO.Assets
                 return;
             }
 
-            if (string.Compare(_cliloc, "cliloc.enu", StringComparison.InvariantCultureIgnoreCase) != 0)
+            // Cliloc.enu is loaded into _entries first as a fallback (so missing
+            // localized strings fall back to English), then the localized file
+            // overwrites. This mirrors the original pre-english-table behavior.
+            string enupath = FileManager.GetUOFilePath("Cliloc.enu");
+            bool enuExists = File.Exists(enupath);
+
+            if (enuExists && string.Compare(_cliloc, "cliloc.enu", StringComparison.InvariantCultureIgnoreCase) != 0)
             {
-                string enupath = FileManager.GetUOFilePath("Cliloc.enu");
-                ReadCliloc(enupath);
+                ReadCliloc(enupath, _entries, _convertToSimplified);
             }
 
-            ReadCliloc(path);
+            // Always load the active cliloc into _entries (this is the original
+            // behavior and must not be skipped, even when _cliloc IS Cliloc.enu).
+            ReadCliloc(path, _entries, _convertToSimplified);
+
+            // The english table always mirrors Cliloc.enu verbatim (no CHT->CHS)
+            // so scripts can match on the original English text regardless of
+            // the active UI language.
+            if (enuExists)
+            {
+                ReadCliloc(enupath, _englishEntries, false);
+            }
+            else
+            {
+                // No enu file available: fall back to the active cliloc as the
+                // "english" table so GetEnglishString always returns something.
+                ReadCliloc(path, _englishEntries, false);
+            }
         }
 
         void ReadCliloc(string path)
+        {
+            ReadCliloc(path, _entries, _convertToSimplified);
+        }
+
+        void ReadCliloc(string path, Dictionary<int, string> target, bool convertToSimplified)
         {
             using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
@@ -95,15 +122,19 @@ namespace ClassicUO.Assets
                 byte flag = reader.ReadUInt8();
                 short length = reader.ReadInt16LE();
                 string text = reader.ReadUTF8(length);
-                if (_convertToSimplified)
+                if (convertToSimplified)
                     text = ChineseCharConverter.TraditionalToSimplified(text);
                 text = string.Intern(text);
 
-                _entries[number] = text;
+                target[number] = text;
             }
         }
 
-        public override void ClearResources() => _entries.Clear();
+        public override void ClearResources()
+        {
+            _entries.Clear();
+            _englishEntries.Clear();
+        }
 
         public string GetString(int number)
         {
@@ -142,9 +173,59 @@ namespace ClassicUO.Assets
             return s;
         }
 
+        /// <summary>
+        /// Returns the original English (Cliloc.enu) string for the given cliloc
+        /// number, without any localization or CHT->CHS conversion applied.
+        /// Falls back to the localized entry when no English entry is available
+        /// (e.g. when the client could not load Cliloc.enu).
+        /// </summary>
+        public string GetEnglishString(int number)
+        {
+            if (_englishEntries.TryGetValue(number, out string text) && text != null)
+                return text;
+
+            return GetString(number);
+        }
+
+        public string GetEnglishString(int number, string replace)
+        {
+            string s = GetEnglishString(number);
+
+            if (string.IsNullOrEmpty(s))
+            {
+                s = replace;
+            }
+
+            return s;
+        }
+
         public unsafe string Translate(int clilocNum, string arg = "", bool capitalize = false)
         {
-            string baseCliloc = GetString(clilocNum);
+            return TranslateCore(clilocNum, arg, capitalize, GetString, _entries, _convertToSimplified);
+        }
+
+        /// <summary>
+        /// Translates a cliloc using the original English (Cliloc.enu) entries,
+        /// ignoring localization and CHT->CHS conversion. Argument resolution
+        /// (recursing into <c>#&lt;cliloc&gt;</c> args) also prefers English.
+        /// Used by the scripting API so scripts can match against stable English
+        /// text regardless of the active UI language.
+        /// </summary>
+        public unsafe string TranslateEnglish(int clilocNum, string arg = "", bool capitalize = false)
+        {
+            return TranslateCore(clilocNum, arg, capitalize, GetEnglishString, _englishEntries, false);
+        }
+
+        private unsafe string TranslateCore(
+            int clilocNum,
+            string arg,
+            bool capitalize,
+            Func<int, string> baseLookup,
+            Dictionary<int, string> argEntries,
+            bool convertToSimplified
+        )
+        {
+            string baseCliloc = baseLookup(clilocNum);
 
             if (baseCliloc == null)
             {
@@ -269,7 +350,7 @@ namespace ClassicUO.Assets
                         {
                             if (int.TryParse(a.Slice(1).ToString(), out int id1))
                             {
-                                string ss = GetString(id1);
+                                string ss = baseLookup(id1);
 
                                 if (string.IsNullOrEmpty(ss))
                                 {
@@ -283,7 +364,7 @@ namespace ClassicUO.Assets
                         }
                         else if (has_arguments && int.TryParse(a.ToString(), out int clil))
                         {
-                            if (_entries.TryGetValue(clil, out string value) && !string.IsNullOrEmpty(value))
+                            if (argEntries.TryGetValue(clil, out string value) && !string.IsNullOrEmpty(value))
                             {
                                 a = value.AsSpan();
                             }
@@ -303,7 +384,7 @@ namespace ClassicUO.Assets
 
                 sb.Dispose();
 
-                if (_convertToSimplified)
+                if (convertToSimplified)
                     baseCliloc = ChineseCharConverter.TraditionalToSimplified(baseCliloc);
 
                 if (capitalize)

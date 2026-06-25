@@ -354,6 +354,7 @@ public static partial class GenDoc
         //string cleanedText = string.Join(" ", rawText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
         string cleanedDocumentation = XmlDocPrefixRx().Replace(rawText, "$1");
         cleanedDocumentation = CodeBlockRx().Replace(cleanedDocumentation, "`$1`");
+        cleanedDocumentation = CleanXmlTags(cleanedDocumentation);
         return cleanedDocumentation.Replace("///", "");
 
     }
@@ -411,8 +412,9 @@ public static partial class GenDoc
 
         string r = string.Join(" ", paramElement.Content.Select(c => c.ToString().Trim()));
         Regex codeBlockReplacer = CodeBlockRx();
-        r = codeBlockReplacer.Replace(r, "`$1`")
-            .Replace("///", "")
+        r = codeBlockReplacer.Replace(r, "`$1`");
+        r = CleanXmlTags(r);
+        r = r.Replace("///", "")
             .Trim()
             .Replace("\n", "<br>");
         return r;
@@ -633,6 +635,54 @@ public static partial class GenDoc
     [GeneratedRegex(@"^\s*(///.*)$", RegexOptions.Multiline // Treat ^ and $ as start/end of LINE
     )]
     private static partial Regex XmlDocPrefixRx();
+
+    // Inline self-closing tags: <paramref name="X"/> -> `X`, <see langword="X"/> -> `X`
+    [GeneratedRegex(@"<paramref\s+name=""([^""]+)""\s*/>")]
+    private static partial Regex ParamRefRx();
+
+    [GeneratedRegex(@"<see\s+langword=""([^""]+)""\s*/>")]
+    private static partial Regex SeeLangwordRx();
+
+    // <see cref="T"/> / <seealso cref="T"/> -> `T` (strip namespace prefix + generic/param signature)
+    [GeneratedRegex(@"<(?:see|seealso)\s+cref=""([^""]+)""\s*/?>")]
+    private static partial Regex SeeCrefRx();
+
+    // Block/inline wrapper tags that should keep their inner text but drop the tag:
+    // <remarks>, <example>, <para>, <summary>, <description>, <term>, <item>, <list>, <note>
+    [GeneratedRegex(@"</?(?:remarks|example|para|summary|description|term|item|list|note)\b[^>]*>")]
+    private static partial Regex BlockTagRx();
+
+    /// <summary>
+    /// Normalizes leftover XML documentation tags that Roslyn surfaces as raw text
+    /// (the generator reads `summary`/`param` inner content via ToString(), which
+    /// preserves child tags verbatim). Applied AFTER CodeBlockRx so <c>/<code>
+    /// are already converted. Order matters: empty/inline tags first, then cref,
+    /// then block wrappers, then a final sweep for any stray XML element.
+    /// </summary>
+    private static string CleanXmlTags(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+
+        text = ParamRefRx().Replace(text, "`$1`");
+        text = SeeLangwordRx().Replace(text, "`$1`");
+        text = SeeCrefRx().Replace(text, m =>
+        {
+            string cref = m.Groups[1].Value;
+            // "M:Namespace.Type.Method(System.Int32)" -> "Method"
+            // "GetClilocString(int,bool)" -> "GetClilocString"
+            int paren = cref.IndexOf('(');
+            if (paren >= 0)
+                cref = cref.Substring(0, paren);
+            cref = cref.TrimStart('T', 'M', 'P', 'F', 'N', ':');
+            int dot = cref.LastIndexOf('.');
+            if (dot >= 0)
+                cref = cref.Substring(dot + 1);
+            return "`" + cref + "`";
+        });
+        text = BlockTagRx().Replace(text, string.Empty);
+        return text;
+    }
 }
 
 class Program

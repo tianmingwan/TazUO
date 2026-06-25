@@ -23,7 +23,7 @@ namespace ClassicUO.Game.Managers
             _world = world;
         }
 
-        public void Add(uint serial, uint revision, string name, string data, int namecliloc)
+        public void Add(uint serial, uint revision, string name, string data, int namecliloc, string englishName = null, string englishData = null)
         {
             if (!_itemsProperties.TryGetValue(serial, out ItemProperty prop))
             {
@@ -36,6 +36,12 @@ namespace ClassicUO.Game.Managers
             prop.Name = name;
             prop.Data = data;
             prop.NameCliloc = namecliloc;
+            // Store the original English (Cliloc.enu) text so scripts can match
+            // against it regardless of the active UI language. Falls back to the
+            // localized name/data when no English copy was provided (e.g. when
+            // Cliloc.enu is unavailable).
+            prop.EnglishName = englishName ?? name;
+            prop.EnglishData = englishData ?? data;
 
             EventSink.InvokeOPLOnReceive(null, new OPLEventArgs(serial, name, data));
 
@@ -100,6 +106,27 @@ namespace ClassicUO.Game.Managers
             return false;
         }
 
+        /// <summary>
+        /// Returns the original English (Cliloc.enu) name and property text for
+        /// the given serial. Intended for scripts that match against stable
+        /// English strings (e.g. auto-loot filters) so they keep working under
+        /// a localized client.
+        /// </summary>
+        public bool TryGetEnglishNameAndData(uint serial, out string name, out string data)
+        {
+            if (_itemsProperties.TryGetValue(serial, out ItemProperty p))
+            {
+                name = p.EnglishName;
+                data = p.EnglishData;
+
+                return true;
+            }
+
+            name = data = null;
+
+            return false;
+        }
+
         public int GetNameCliloc(uint serial)
         {
             if (_itemsProperties.TryGetValue(serial, out ItemProperty p))
@@ -132,6 +159,16 @@ namespace ClassicUO.Game.Managers
         public uint Serial;
         public int NameCliloc;
 
+        /// <summary>
+        /// Original English (Cliloc.enu) copy of <see cref="Name"/>. Used by the
+        /// scripting API so localized clients can still match on English names.
+        /// </summary>
+        public string EnglishName;
+        /// <summary>
+        /// Original English (Cliloc.enu) copy of <see cref="Data"/>.
+        /// </summary>
+        public string EnglishData;
+
         public string CreateData(bool extended) => string.Empty;
     }
 
@@ -147,7 +184,18 @@ namespace ClassicUO.Game.Managers
 
         private World world;
 
-        public ItemPropertiesData(World world, Item item, Item compareTo = null)
+        public ItemPropertiesData(World world, Item item, Item compareTo = null) : this(world, item, compareTo, false)
+        {
+        }
+
+        /// <summary>
+        /// Constructs item property data for matching. Pass <paramref name="useEnglish"/>
+        /// = true to read the original English (Cliloc.enu) name/properties instead of
+        /// the localized text, so rule/loot matching against hard-coded English keywords
+        /// (e.g. "Legendary Artifact") keeps working under any UI language. Tooltip
+        /// display and comparison still use the localized default overload.
+        /// </summary>
+        public ItemPropertiesData(World world, Item item, Item compareTo, bool useEnglish)
         {
             if (item == null)
                 return;
@@ -156,7 +204,11 @@ namespace ClassicUO.Game.Managers
             itemComparedTo = compareTo;
 
             serial = item.Serial;
-            if (world.OPL.TryGetNameAndData(item.Serial, out Name, out RawData))
+            bool got = useEnglish
+                ? world.OPL.TryGetEnglishNameAndData(item.Serial, out Name, out RawData)
+                : world.OPL.TryGetNameAndData(item.Serial, out Name, out RawData);
+
+            if (got)
             {
                 Name = Name.Trim();
                 HasData = true;

@@ -35,6 +35,11 @@ public class JournalFilterManager
 
     public bool IgnoreMessage(string message)
     {
+        // Defensive null check: if the filters set was never loaded or got cleared,
+        // never dereference null. This guards the journal hot path (called on every
+        // incoming chat message) against a corrupt journal_filters.json.
+        if(_filters == null)
+            return false;
         if(_filters.Contains(message))
             return true;
         return false;
@@ -48,7 +53,7 @@ public class JournalFilterManager
 
     public void Load()
     {
-        if(JsonHelper.Load(_savePath, HashSetContext.Default.HashSetString, out HashSet<string> obj))
+        if(JsonHelper.Load(_savePath, HashSetContext.Default.HashSetString, out HashSet<string> obj) && obj != null)
             _filters = obj;
     }
 

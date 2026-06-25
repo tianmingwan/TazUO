@@ -1,11 +1,11 @@
 ---
 title: ApiLand
-description:  Represents a Python-accessible land tile in the game world.  Inherits spatial and visual data from <see cref="ApiGameObject"/> . 
+description:  Represents a Python-accessible land tile in the game world.  Inherits spatial and visual data from `ApiGameObject` . 
 ---
 
 ## Class Description
  Represents a Python-accessible land tile in the game world.
- Inherits spatial and visual data from <see cref="ApiGameObject"/> .
+ Inherits spatial and visual data from `ApiGameObject` .
 
 
 ## Properties

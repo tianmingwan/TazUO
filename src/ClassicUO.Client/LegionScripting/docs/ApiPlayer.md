@@ -1,11 +1,11 @@
 ---
 title: ApiPlayer
-description:  Represents a Python-accessible player character with full stat and equipment data.  Inherits mobile data from <see cref="ApiMobile"/> . 
+description:  Represents a Python-accessible player character with full stat and equipment data.  Inherits mobile data from `ApiMobile` . 
 ---
 
 ## Class Description
  Represents a Python-accessible player character with full stat and equipment data.
- Inherits mobile data from <see cref="ApiMobile"/> .
+ Inherits mobile data from `ApiMobile` .
 
 
 ## Properties

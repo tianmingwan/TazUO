@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `6/12/26`.*
+*This was generated on `6/25/26`.*
 
 ## Properties
 ### `Events`
@@ -209,7 +209,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
  ```py
  API.OnHotKey("SHIFT+A")
  ```
- The <paramref name="key"/> can include modifiers (CTRL, SHIFT, ALT),
+ The `key` can include modifiers (CTRL, SHIFT, ALT),
  for example: "CTRL+SHIFT+F1" or "ALT+A".
 
 
@@ -2026,7 +2026,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 ---
 
 ### ItemNameAndProps
-`(serial, wait, timeout)`
+`(serial, wait, timeout, englishOnly)`
  Gets item name and properties.
  This returns the name and properties in a single string. You can split it by new line if you want to separate them.
  Example:
@@ -2037,7 +2037,18 @@ You can now type `-updateapi` in game to download the latest API.py file.
    if "An Exotic Fish" in data:
      API.SysMsg("Found an exotic fish!")
  ```
-
+ 
+ Under a localized client (e.g. Chinese/CHS) the returned string is
+ localized, so matching against hard-coded English text like
+ `"An Exotic Fish"` will fail. Pass `englishOnly`
+ = `True` to get the original English (Cliloc.enu) name and
+ properties, which is stable regardless of the UI language:
+ ```py
+ data = API.ItemNameAndProps(0x12345678, True, 10, englishOnly=True)
+ if "An Exotic Fish" in data:
+     API.SysMsg("Found it!")
+ ```
+  
 
 **Parameters:**
 
@@ -2046,8 +2057,55 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `serial` | `uint` | ❌ No |  |
 | `wait` | `bool` | ✅ Yes | True or false to wait for name and props |
 | `timeout` | `int` | ✅ Yes | Timeout in seconds |
+| `englishOnly` | `bool` | ✅ Yes | When True, returns the original English (Cliloc.enu) name and properties instead of the localized text. Use this when matching against hard-coded English strings so scripts keep working under any language. |
 
 **Return Type:** `string`
+
+---
+
+### GetClilocString
+`(cliloc, englishOnly)`
+ Returns the raw cliloc string for the given cliloc number.
+ Pass `englishOnly` = `True` to get the original
+ English (Cliloc.enu) string, ignoring the active UI language.
+ Useful for matching against stable English text under a localized client.
+ Example:
+ ```py
+ API.SysMsg(API.GetClilocString(1042931))                # localized
+ API.SysMsg(API.GetClilocString(1042931, englishOnly=True))  # english
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `cliloc` | `int` | ❌ No | The cliloc number. |
+| `englishOnly` | `bool` | ✅ Yes | When True, return the English (Cliloc.enu) string. |
+
+**Return Type:** `string`
+
+---
+
+### GetItemNameCliloc
+`(serial)`
+ Returns the cliloc number used as the item's name, or 0 if unknown.
+ Combine with `GetClilocString` to resolve the
+ name in any language without relying on the localized tooltip text.
+ Example:
+ ```py
+ namecliloc = API.GetItemNameCliloc(serial)
+ english_name = API.GetClilocString(namecliloc, englishOnly=True)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint` | ❌ No |  |
+
+**Return Type:** `int`
 
 ---
 

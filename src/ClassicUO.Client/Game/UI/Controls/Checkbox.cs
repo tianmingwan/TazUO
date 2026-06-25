@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Assets;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
@@ -13,6 +14,8 @@ namespace ClassicUO.Game.UI.Controls
     {
         private bool _isChecked;
         private readonly RenderedText _text;
+        private readonly TextBox _ttfText;
+        private readonly bool _useTTF;
         private readonly ushort _inactive, _active;
 
         public Checkbox(
@@ -22,11 +25,13 @@ namespace ClassicUO.Game.UI.Controls
             byte font = 0,
             ushort color = 0,
             bool isunicode = true,
-            int maxWidth = 0
+            int maxWidth = 0,
+            bool useTTF = false
         )
         {
             _inactive = inactive;
             _active = active;
+            _useTTF = useTTF;
 
             ref readonly SpriteInfo gumpInfoInactive = ref Client.Game.UO.Gumps.GetGump(inactive);
             ref readonly SpriteInfo gumpInfoActive = ref Client.Game.UO.Gumps.GetGump(active);
@@ -40,11 +45,26 @@ namespace ClassicUO.Game.UI.Controls
 
             Width = gumpInfoInactive.UV.Width;
 
-            _text = RenderedText.Create(text, color, font, isunicode, maxWidth: maxWidth);
+            if (useTTF)
+            {
+                int ttfHue = color == 0 ? 0xFFFF : color;
+                _ttfText = TextBox.GetOne(
+                    text,
+                    TrueTypeLoader.EMBEDDED_FONT,
+                    14,
+                    ttfHue,
+                    TextBox.RTLOptions.Default(maxWidth > 0 ? maxWidth : null)
+                );
+                Width += _ttfText.Width + 2;
+                Height = Math.Max(gumpInfoInactive.UV.Width, _ttfText.Height);
+            }
+            else
+            {
+                _text = RenderedText.Create(text, color, font, isunicode, maxWidth: maxWidth);
+                Width += _text.Width;
+                Height = Math.Max(gumpInfoInactive.UV.Width, _text.Height);
+            }
 
-            Width += _text.Width;
-
-            Height = Math.Max(gumpInfoInactive.UV.Width, _text.Height);
             CanMove = false;
             AcceptMouseInput = true;
         }
@@ -74,7 +94,7 @@ namespace ClassicUO.Game.UI.Controls
 
         public override ClickPriority Priority => ClickPriority.High;
 
-        public string Text => _text.Text;
+        public string Text => _useTTF ? (_ttfText?.Text ?? string.Empty) : (_text?.Text ?? string.Empty);
 
         public event EventHandler ValueChanged;
 
@@ -98,7 +118,14 @@ namespace ClassicUO.Game.UI.Controls
                 ShaderHueTranslator.GetHueVector(0)
             );
 
-            _text.Draw(batcher, x + gumpInfo.UV.Width + 2, y);
+            if (_useTTF)
+            {
+                _ttfText?.Draw(batcher, x + gumpInfo.UV.Width + 2, y);
+            }
+            else
+            {
+                _text?.Draw(batcher, x + gumpInfo.UV.Width + 2, y);
+            }
 
             return ok;
         }
@@ -117,6 +144,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             base.Dispose();
             _text?.Destroy();
+            _ttfText?.Dispose();
         }
     }
 }
