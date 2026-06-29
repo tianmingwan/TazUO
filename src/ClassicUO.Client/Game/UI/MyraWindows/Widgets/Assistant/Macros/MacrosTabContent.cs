@@ -20,8 +20,69 @@ public static class MacrosTabContent
     private static readonly MacroType[] _sortedMacroTypeValues;
     private static readonly Dictionary<MacroType, int> _macroTypeToDisplayIndex;
 
+    // Cached localized display names, keyed by enum member name.
+    // Built lazily so the lookup survives live language switches at the login screen
+    // (Language.Instance is reloaded but these dictionaries are rebuilt on demand).
+    private static Dictionary<string, string>? _macroTypeNameCache;
+    private static Dictionary<string, string>? _macroSubTypeNameCache;
+    private static object? _macroTypeNameToken;
+    private static object? _macroSubTypeNameToken;
+
     private static Action? _cleanupAction;
     public static void Cleanup() => _cleanupAction?.Invoke();
+
+    /// <summary>
+    /// Returns the localized display name for a <see cref="MacroType"/>.
+    /// Falls back to a space-separated enum name if no translation property exists.
+    /// </summary>
+    public static string GetMacroTypeName(MacroType t)
+    {
+        EnsureMacroTypeCache();
+        return _macroTypeNameCache!.TryGetValue(t.ToString(), out string? v) && !string.IsNullOrEmpty(v)
+            ? v
+            : StringHelper.AddSpaceBeforeCapital(t.ToString());
+    }
+
+    /// <summary>
+    /// Returns the localized display name for a <see cref="MacroSubType"/>.
+    /// Falls back to a space-separated enum name if no translation property exists.
+    /// INVALID_* / DEPRECATED* members are also returned via the generic fallback.
+    /// </summary>
+    public static string GetMacroSubTypeName(MacroSubType s)
+    {
+        EnsureMacroSubTypeCache();
+        return _macroSubTypeNameCache!.TryGetValue(s.ToString(), out string? v) && !string.IsNullOrEmpty(v)
+            ? v
+            : StringHelper.AddSpaceBeforeCapital(s.ToString());
+    }
+
+    private static void EnsureMacroTypeCache()
+    {
+        var names = Language.Instance.Assistant.MacroTypeNames;
+        // Rebuild when the language instance changed (token = reference identity).
+        if (_macroTypeNameCache != null && ReferenceEquals(names, _macroTypeNameToken)) return;
+        _macroTypeNameCache = BuildStringCache(names);
+        _macroTypeNameToken = names;
+    }
+
+    private static void EnsureMacroSubTypeCache()
+    {
+        var names = Language.Instance.Assistant.MacroSubTypeNames;
+        if (_macroSubTypeNameCache != null && ReferenceEquals(names, _macroSubTypeNameToken)) return;
+        _macroSubTypeNameCache = BuildStringCache(names);
+        _macroSubTypeNameToken = names;
+    }
+
+    private static Dictionary<string, string> BuildStringCache(object langObj)
+    {
+        var dict = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var prop in langObj.GetType().GetProperties())
+        {
+            if (prop.GetMethod != null && prop.PropertyType == typeof(string))
+                dict[prop.Name] = (string?)prop.GetValue(langObj) ?? string.Empty;
+        }
+        return dict;
+    }
 
     static MacrosTabContent()
     {
@@ -31,7 +92,7 @@ public static class MacrosTabContent
             .ToArray();
 
         _sortedMacroTypeNames = macroTypes
-            .Select(t => StringHelper.AddSpaceBeforeCapital(t.ToString()))
+            .Select(GetMacroTypeName)
             .ToArray();
         _sortedMacroTypeValues = macroTypes;
 
@@ -400,7 +461,7 @@ public static class MacrosTabContent
 
                     string[] subNames = new string[subCount];
                     for (int si = 0; si < subCount; si++)
-                        subNames[si] = ((MacroSubType)(si + subOffset)).ToString();
+                        subNames[si] = GetMacroSubTypeName((MacroSubType)(si + subOffset));
 
                     int curSubIdx = (int)capturedAction.SubCode - subOffset;
                     if (curSubIdx < 0 || curSubIdx >= subCount) curSubIdx = 0;

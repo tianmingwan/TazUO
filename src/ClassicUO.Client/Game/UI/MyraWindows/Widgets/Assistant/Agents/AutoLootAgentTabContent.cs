@@ -14,7 +14,11 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
 public static class AutoLootAgentTabContent
 {
-    private static readonly string[] PriorityLabels = { "Low", "Normal", "High" };
+    private static string[] GetPriorityLabels()
+    {
+        var l = Language.Instance.Assistant.Agents.AutoLoot;
+        return new[] { l.PriorityLow, l.PriorityNormal, l.PriorityHigh };
+    }
 
     public static Widget Build()
     {
@@ -183,20 +187,21 @@ public static class AutoLootAgentTabContent
                 }), dataRow, 3);
 
                 // Priority cycle: < label >
-                var priorityLabel = new MyraLabel(PriorityLabels[(int)entry.Priority], MyraLabel.TextStyle.P);
+                string[] priorityLabels = GetPriorityLabels();
+                var priorityLabel = new MyraLabel(priorityLabels[(int)entry.Priority], MyraLabel.TextStyle.P);
                 var priorityRow = new HorizontalStackPanel { Spacing = 2 };
                 priorityRow.Widgets.Add(new MyraButton("<", () =>
                 {
-                    int p = ((int)entry.Priority - 1 + PriorityLabels.Length) % PriorityLabels.Length;
+                    int p = ((int)entry.Priority - 1 + priorityLabels.Length) % priorityLabels.Length;
                     entry.Priority = (AutoLootManager.AutoLootPriority)p;
-                    priorityLabel.Text = PriorityLabels[p];
+                    priorityLabel.Text = priorityLabels[p];
                 }));
                 priorityRow.Widgets.Add(priorityLabel);
                 priorityRow.Widgets.Add(new MyraButton(">", () =>
                 {
-                    int p = ((int)entry.Priority + 1) % PriorityLabels.Length;
+                    int p = ((int)entry.Priority + 1) % priorityLabels.Length;
                     entry.Priority = (AutoLootManager.AutoLootPriority)p;
-                    priorityLabel.Text = PriorityLabels[p];
+                    priorityLabel.Text = priorityLabels[p];
                 }));
                 grid.AddWidget(priorityRow, dataRow, 4);
 

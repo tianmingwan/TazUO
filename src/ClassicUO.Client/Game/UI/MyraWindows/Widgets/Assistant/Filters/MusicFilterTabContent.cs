@@ -215,7 +215,7 @@ public static class MusicFilterTabContent
             {
                 GameActions.Print(string.Format(lang.ImportFailed, ex.Message), Constants.HUE_ERROR);
             }
-        }) { Tooltip = "Import filtered music tracks from clipboard JSON (adds to current filters)" });
+        }) { Tooltip = lang.ImportTooltip });
         actionRow.Widgets.Add(new MyraButton(ui.Export, () =>
         {
             try
@@ -232,7 +232,7 @@ public static class MusicFilterTabContent
             {
                 GameActions.Print(string.Format(lang.ExportFailed, ex.Message), Constants.HUE_ERROR);
             }
-        }) { Tooltip = "Export all filtered music tracks as JSON to clipboard" });
+        }) { Tooltip = lang.ExportTooltip });
 
         BuildLastMusicSection();
         root.Widgets.Add(lastMusicPanel);

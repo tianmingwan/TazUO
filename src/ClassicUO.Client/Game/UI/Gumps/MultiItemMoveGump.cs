@@ -107,7 +107,7 @@ namespace ClassicUO.Game.UI.Gumps
             // "Object delay" + numeric input (right-aligned)
             int delayRowY = cy + _header.Height + 5;
 
-            Add(new Label("Object delay:", true, 0xFFFF, 150)
+            Add(new Label(Language.Instance.LegacyGumps.MultiItemMove.ObjectDelay, true, 0xFFFF, 150)
             {
                 X = cx,
                 Y = delayRowY
@@ -144,8 +144,8 @@ namespace ClassicUO.Game.UI.Gumps
             NiceButton b;
 
             // Move to backpack (full width)
-            Add(b = new NiceButton(cx, rowY1, cw, 20, ButtonAction.Activate, "Move to backpack", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Move selected items to your backpack.");
+            Add(b = new NiceButton(cx, rowY1, cw, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.MultiItemMove.MoveToBackpack, align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(Language.Instance.LegacyGumps.MultiItemMove.MoveToBackpackTooltip);
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -158,20 +158,20 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
             // Set favorite (left)
-            Add(b = new NiceButton(cx, rowY2, halfW, 20, ButtonAction.Activate, "Set favorite bag", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Set your preferred destination container for future item moves.");
+            Add(b = new NiceButton(cx, rowY2, halfW, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.MultiItemMove.SetFavoriteBag, align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(Language.Instance.LegacyGumps.MultiItemMove.SetFavoriteBagTooltip);
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    GameActions.Print(World, "Target a container to set as your favorite.");
+                    GameActions.Print(World, Language.Instance.LegacyGumps.MultiItemMove.TargetFavoriteContainer);
                     World.TargetManager.SetTargeting(CursorTarget.SetFavoriteMoveBag, CursorType.Target, TargetType.Neutral);
                 }
             };
 
             // To favorite (right)
-            Add(b = new NiceButton(cx + halfW + GAP, rowY2, halfW, 20, ButtonAction.Activate, "To favorite", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Move selected items to your favorite container.");
+            Add(b = new NiceButton(cx + halfW + GAP, rowY2, halfW, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.MultiItemMove.ToFavorite, align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(Language.Instance.LegacyGumps.MultiItemMove.ToFavoriteTooltip);
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -179,19 +179,19 @@ namespace ClassicUO.Game.UI.Gumps
                     uint fav = ProfileManager.CurrentProfile.SetFavoriteMoveBagSerial;
                     if (fav == 0)
                     {
-                        GameActions.Print(World, "No favorite container set. Please target one.");
+                        GameActions.Print(World, Language.Instance.LegacyGumps.MultiItemMove.NoFavoriteSet);
                         World.TargetManager.SetTargeting(CursorTarget.SetFavoriteMoveBag, CursorType.Target, TargetType.Neutral);
                         return;
                     }
 
                     Item cont = World.Items.Get(fav);
                     if (cont != null) ProcessItemMoves(World, cont);
-                    else GameActions.Print(World, "Favorite container is not available.");
+                    else GameActions.Print(World, Language.Instance.LegacyGumps.MultiItemMove.FavoriteUnavailable);
                 }
             };
 
             // Cancel (left)
-            Add(b = new NiceButton(cx, rowY3, halfW, 20, ButtonAction.Activate, "Cancel", align: TEXT_ALIGN_TYPE.TS_CENTER));
+            Add(b = new NiceButton(cx, rowY3, halfW, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.MultiItemMove.Cancel, align: TEXT_ALIGN_TYPE.TS_CENTER));
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -202,13 +202,13 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
             // Move to (right)
-            Add(b = new NiceButton(cx + halfW + GAP, rowY3, halfW, 20, ButtonAction.Activate, "Move to", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Select a container or a ground tile to move these items to.");
+            Add(b = new NiceButton(cx + halfW + GAP, rowY3, halfW, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.MultiItemMove.MoveTo, align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(Language.Instance.LegacyGumps.MultiItemMove.MoveToTooltip);
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    GameActions.Print(World, "Where should we move these items?");
+                    GameActions.Print(World, Language.Instance.LegacyGumps.MultiItemMove.WhereToMove);
                     World.TargetManager.SetTargeting(CursorTarget.MoveItemContainer, CursorType.Target, TargetType.Neutral);
                 }
             };
@@ -261,10 +261,10 @@ namespace ClassicUO.Game.UI.Gumps
                 Item moveToContainer = world.Items.Get(serial);
                 if (moveToContainer == null || !moveToContainer.ItemData.IsContainer)
                 {
-                    GameActions.Print(world, "That does not appear to be a container...");
+                    GameActions.Print(world, Language.Instance.LegacyGumps.MultiItemMove.NotAContainer);
                     return;
                 }
-                GameActions.Print(world, "Moving items to the selected container..");
+                GameActions.Print(world, Language.Instance.LegacyGumps.MultiItemMove.MovingToContainer);
                 ProcessItemMoves(world, moveToContainer);
             }
         }
@@ -391,7 +391,8 @@ namespace ClassicUO.Game.UI.Gumps
         private static string TextForHeader()
         {
             int count = SelectedCount;
-            return processing ? $"Moving {count} items." : $"Selected {count} items.";
+            var lang = Language.Instance.LegacyGumps.MultiItemMove;
+            return processing ? string.Format(lang.MovingItems, count) : string.Format(lang.SelectedItems, count);
         }
 
         private static void ClearAll()

@@ -543,7 +543,12 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                     // Reload the language strings and rebuild the login screen so the
                     // selection takes effect live without requiring a restart.
+                    // NOTE: TazLang covers the .ini-based login strings; Language.Load()
+                    // refreshes Language.Instance (the JSON-based strings used by in-game
+                    // gumps/Myra windows such as the Legion Assistant). Without this call,
+                    // switching language on the login screen leaves in-game UI in English.
                     TazLang.Load(langs[i]);
+                    Language.Load();
                     Client.Game.GetScene<LoginScene>()?.RebuildLoginGump();
                 },
                 TazLang.Get("uilangtooltip")

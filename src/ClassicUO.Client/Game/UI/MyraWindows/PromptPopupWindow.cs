@@ -36,12 +36,16 @@ public class PromptPopupWindow : MyraControl
         string title,
         string message,
         Action<string> onSubmit,
-        string submitText = "Submit",
-        string cancelText = "Cancel",
+        string submitText = null,
+        string cancelText = null,
         Action onCancel = null,
         string defaultValue = "",
-        string hintText = "Enter your response..."
-    ) : this(title, message, onSubmit, submitText, cancelText, onCancel, defaultValue, hintText, null)
+        string hintText = null
+    ) : this(title, message, onSubmit,
+        submitText ?? Language.Instance.Scripting.Submit,
+        cancelText ?? Language.Instance.UiCommons.Cancel,
+        onCancel, defaultValue,
+        hintText ?? Language.Instance.Scripting.EnterYourResponse, null)
     {
     }
 

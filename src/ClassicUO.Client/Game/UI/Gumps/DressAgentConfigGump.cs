@@ -43,7 +43,8 @@ namespace ClassicUO.Game.UI.Gumps
             _allConfigs.AddRange(DressAgentManager.Instance.OtherCharacterConfigs);
 
             // Config selection dropdown
-            Add(new Label("Select Config:", true, 0xFFFF, font: 1)
+            var lang = Language.Instance.LegacyGumps.DressAgentConfig;
+            Add(new Label(lang.SelectConfig, true, 0xFFFF, font: 1)
             {
                 X = 20,
                 Y = 20
@@ -59,7 +60,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (selectedIndex == -1) selectedIndex = 0;
 
-            _configCombobox = new Combobox(120, 20, 250, configOptions, selectedIndex, emptyString: "No configs available")
+            _configCombobox = new Combobox(120, 20, 250, configOptions, selectedIndex, emptyString: lang.NoConfigs)
             {
                 SelectedIndex = selectedIndex
             };
@@ -67,7 +68,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_configCombobox);
 
             // Create Config button
-            var createButton = new NiceButton(380, 20, 80, 25, ButtonAction.Default, "Create New") { IsSelectable = false, DisplayBorder = true };
+            var createButton = new NiceButton(380, 20, 80, 25, ButtonAction.Default, lang.CreateNew) { IsSelectable = false, DisplayBorder = true };
             createButton.MouseUp += (s, e) =>
             {
                 CreateNewConfig();
@@ -75,7 +76,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(createButton);
 
             // Title with rename functionality
-            Add(new Label("Config Name:", true, 0xFFFF, font: 1)
+            Add(new Label(lang.ConfigName, true, 0xFFFF, font: 1)
             {
                 X = 20,
                 Y = 50
@@ -109,7 +110,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             // Character info
-            Add(new Label($"Character: {_config.CharacterName}", true, 999, font: 1)
+            Add(new Label(string.Format(Language.Instance.LegacyGumps.DressAgentConfig.Character, _config.CharacterName), true, 999, font: 1)
             {
                 X = 20,
                 Y = 75
@@ -118,7 +119,7 @@ namespace ClassicUO.Game.UI.Gumps
             // KR Packet option
             if (!_readOnly)
             {
-                var krPacketCheckbox = new Checkbox(0x00D2, 0x00D3, "Use Equip Packets (faster)", 1, 0xFFFF, true)
+                var krPacketCheckbox = new Checkbox(0x00D2, 0x00D3, Language.Instance.LegacyGumps.DressAgentConfig.UseEquipPackets, 1, 0xFFFF, true)
                 {
                     X = 300,
                     Y = 75,
@@ -129,7 +130,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _config.UseKREquipPacket = krPacketCheckbox.IsChecked;
                     DressAgentManager.Instance.Save();
                 };
-                krPacketCheckbox.SetTooltip("Not all servers support this.");
+                krPacketCheckbox.SetTooltip(Language.Instance.LegacyGumps.DressAgentConfig.UseEquipPacketsTooltip);
                 Add(krPacketCheckbox);
             }
 
@@ -142,9 +143,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (!_readOnly)
             {
-                AddButton("Add Item (Target)", () =>
+                AddButton(Language.Instance.LegacyGumps.DressAgentConfig.AddItemTarget, () =>
                 {
-                    GameActions.Print(World, "Target item to add to dress config");
+                    GameActions.Print(World, Language.Instance.LegacyGumps.DressAgentConfig.TargetItemToAdd);
                     World.TargetManager.SetTargeting((obj) =>
                     {
                         if (obj != null && obj is Entity objEntity && SerialHelper.IsItem(objEntity.Serial))
@@ -155,57 +156,57 @@ namespace ClassicUO.Game.UI.Gumps
                     });
                 });
 
-                AddButton("Add All Equipped", () =>
+                AddButton(Language.Instance.LegacyGumps.DressAgentConfig.AddAllEquipped, () =>
                 {
                     DressAgentManager.Instance.AddCurrentlyEquippedItems(_config);
                     RefreshItemsList();
                 });
 
-                AddButton("Clear All Items", () =>
+                AddButton(Language.Instance.LegacyGumps.DressAgentConfig.ClearAllItems, () =>
                 {
                     DressAgentManager.Instance.ClearConfig(_config);
                     RefreshItemsList();
                 });
 
-                AddButton("Set Undress Bag", () =>
+                AddButton(Language.Instance.LegacyGumps.DressAgentConfig.SetUndressBag, () =>
                 {
-                    GameActions.Print(World, "Target container for undress items");
+                    GameActions.Print(World, Language.Instance.LegacyGumps.DressAgentConfig.TargetUndressContainer);
                     World.TargetManager.SetTargeting((obj) =>
                     {
                         if (obj != null && obj is Entity objEntity && SerialHelper.IsItem(objEntity.Serial))
                         {
                             DressAgentManager.Instance.SetUndressBag(_config, objEntity.Serial);
-                            GameActions.Print(World, $"Undress bag set to: {objEntity.Name}");
+                            GameActions.Print(World, string.Format(Language.Instance.LegacyGumps.DressAgentConfig.UndressBagSetTo, objEntity.Name));
                             RefreshItemsList();
                         }
                     });
                 });
             }
 
-            AddButton("Dress", 63, () =>
+            AddButton(Language.Instance.LegacyGumps.DressAgentConfig.Dress, 63, () =>
             {
                 DressAgentManager.Instance.DressFromConfig(_config);
             });
 
-            AddButton("Undress", 49, () =>
+            AddButton(Language.Instance.LegacyGumps.DressAgentConfig.Undress, 49, () =>
             {
                 DressAgentManager.Instance.UndressFromConfig(_config);
             });
 
             if(!_readOnly) {
-                AddButton("Create Dress Macro", () =>
+                AddButton(Language.Instance.LegacyGumps.DressAgentConfig.CreateDressMacro, () =>
                 {
                     DressAgentManager.Instance.CreateDressMacro(_config.Name);
-                    GameActions.Print(World, $"Created dress macro: Dress: {_config.Name}");
+                    GameActions.Print(World, string.Format(Language.Instance.LegacyGumps.DressAgentConfig.CreatedDressMacro, _config.Name));
                 });
 
-                AddButton("Create Undress Macro", () =>
+                AddButton(Language.Instance.LegacyGumps.DressAgentConfig.CreateUndressMacro, () =>
                 {
                     DressAgentManager.Instance.CreateUndressMacro(_config.Name);
-                    GameActions.Print(World, $"Created undress macro: Undress: {_config.Name}");
+                    GameActions.Print(World, string.Format(Language.Instance.LegacyGumps.DressAgentConfig.CreatedUndressMacro, _config.Name));
                 });
 
-                AddButton("Delete Config", 33, () =>
+                AddButton(Language.Instance.LegacyGumps.DressAgentConfig.DeleteConfig, 33, () =>
                 {
                     DeleteCurrentConfig();
                 });
@@ -283,7 +284,7 @@ namespace ClassicUO.Game.UI.Gumps
             // Rebuild the gump to reflect the new config
             BuildGump();
 
-            GameActions.Print(World, $"Created new dress config: {newName}");
+            GameActions.Print(World, string.Format(Language.Instance.LegacyGumps.DressAgentConfig.CreatedNewConfig, newName));
         }
 
         private void DeleteCurrentConfig()
@@ -303,7 +304,7 @@ namespace ClassicUO.Game.UI.Gumps
                 // Rebuild the gump with the new config
                 BuildGump();
 
-                GameActions.Print(World, $"Deleted config. Switched to: {_config.Name}");
+                GameActions.Print(World, string.Format(Language.Instance.LegacyGumps.DressAgentConfig.DeletedSwitchedTo, _config.Name));
             }
             else
             {
@@ -320,13 +321,13 @@ namespace ClassicUO.Game.UI.Gumps
                     // Rebuild the gump
                     BuildGump();
 
-                    GameActions.Print(World, $"Deleted config. Switched to: {_config.Name} ({_config.CharacterName}) - Read Only");
+                    GameActions.Print(World, string.Format(Language.Instance.LegacyGumps.DressAgentConfig.DeletedSwitchedToReadOnly, _config.Name, _config.CharacterName));
                 }
                 else
                 {
                     // No configs left at all, dispose the gump
                     DressAgentManager.Instance.DeleteConfig(_config);
-                    GameActions.Print(World, "Deleted last config. Closing dress agent.");
+                    GameActions.Print(World, Language.Instance.LegacyGumps.DressAgentConfig.DeletedLastClosing);
                     Dispose();
                 }
             }
@@ -337,7 +338,7 @@ namespace ClassicUO.Game.UI.Gumps
             _itemsList.Clear();
 
             // Items header
-            _itemsList.Add(new Label($"Items ({_config.Items.Count}):", true, 0xFFFF, font: 1));
+            _itemsList.Add(new Label(string.Format(Language.Instance.LegacyGumps.DressAgentConfig.ItemsCount, _config.Items.Count), true, 0xFFFF, font: 1));
 
             if (_config.Items.Count > 0)
             {
@@ -357,7 +358,7 @@ namespace ClassicUO.Game.UI.Gumps
                     // Delete button
                     if (!_readOnly)
                     {
-                        var deleteButton = new NiceButton(itemArea.Width - 25, 2, 20, 20, ButtonAction.Default, "X") { IsSelectable = false, DisplayBorder = true };
+                        var deleteButton = new NiceButton(itemArea.Width - 25, 2, 20, 20, ButtonAction.Default, Language.Instance.LegacyGumps.DressAgentConfig.Delete) { IsSelectable = false, DisplayBorder = true };
                         deleteButton.MouseUp += (s, e) =>
                         {
                             DressAgentManager.Instance.RemoveItemFromConfig(_config, item.Serial);
@@ -371,10 +372,10 @@ namespace ClassicUO.Game.UI.Gumps
             }
             else
             {
-                _itemsList.Add(new Label("No items configured.", true, 0xFFFF, font: 1));
+                _itemsList.Add(new Label(Language.Instance.LegacyGumps.DressAgentConfig.NoItems, true, 0xFFFF, font: 1));
                 if (!_readOnly)
                 {
-                    _itemsList.Add(new Label("Use the buttons on the left to add items.", true, 0xFFFF, font: 1));
+                    _itemsList.Add(new Label(Language.Instance.LegacyGumps.DressAgentConfig.UseButtonsToAdd, true, 0xFFFF, font: 1));
                 }
             }
 
@@ -382,12 +383,12 @@ namespace ClassicUO.Game.UI.Gumps
             if (_config.UndressBagSerial != 0)
             {
                 Item bagItem = World.Items.TryGetValue(_config.UndressBagSerial, out Item item) ? item : null;
-                string bagName = bagItem?.Name ?? "Unknown";
-                _itemsList.Add(new Label($"Undress Bag: {bagName} ({_config.UndressBagSerial})", true, 53, font: 1));
+                string bagName = bagItem?.Name ?? Language.Instance.LegacyGumps.DressAgentConfig.Unknown;
+                _itemsList.Add(new Label(string.Format(Language.Instance.LegacyGumps.DressAgentConfig.UndressBagNamed, bagName, _config.UndressBagSerial), true, 53, font: 1));
             }
             else
             {
-                _itemsList.Add(new Label("Undress Bag: Player Backpack (default)", true, 0xFFFF, font: 1));
+                _itemsList.Add(new Label(Language.Instance.LegacyGumps.DressAgentConfig.UndressBagBackpack, true, 0xFFFF, font: 1));
             }
         }
     }

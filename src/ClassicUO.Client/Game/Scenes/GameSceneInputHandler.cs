@@ -817,13 +817,13 @@ namespace ClassicUO.Game.Scenes
                                 ProfileManager.CurrentProfile.SavedMountSerial = m;
                                 Entity mount = _world.Get(m);
                                 string mountName = mount?.Name ?? "mount";
-                                GameActions.Print(_world, $"Mount set: {mountName} (Serial: {m.Serial})", 48);
+                                GameActions.Print(_world, string.Format(Language.Instance.Assistant.Macros.MountSetWithSerial, mountName, m.Serial), 48);
                             }
                             _world.TargetManager.Reset();
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, Language.Instance.Assistant.Macros.MustTargetMobileToSetMount, 32);
                         }
 
                         break;

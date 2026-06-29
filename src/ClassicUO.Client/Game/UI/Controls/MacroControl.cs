@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
@@ -16,8 +17,21 @@ namespace ClassicUO.Game.UI.Controls
 {
     public class MacroControl : Control
     {
-        private static readonly string[] _allHotkeysNames = Enum.GetNames(typeof(MacroType));
-        private static readonly string[] _allSubHotkeysNames = Enum.GetNames(typeof(MacroSubType));
+        // Localized macro type display names, indexed by MacroType enum value.
+        // Rebuilt on each access so live language switches are reflected.
+        private static string[] _allHotkeysNames
+        {
+            get
+            {
+                MacroType[] values = (MacroType[])Enum.GetValues(typeof(MacroType));
+                string[] names = new string[values.Length];
+                for (int i = 0; i < values.Length; i++)
+                    names[(int)values[i]] = UI.MyraWindows.Widgets.Assistant.Macros.MacrosTabContent.GetMacroTypeName(values[i]);
+                return names;
+            }
+        }
+
+        private static string GetSubHotkeyName(MacroSubType s) => UI.MyraWindows.Widgets.Assistant.Macros.MacrosTabContent.GetMacroSubTypeName(s);
         private readonly DataBox _databox;
         private readonly HotkeyBox _hotkeyBox;
         private readonly Gumps.Gump _gump;
@@ -37,7 +51,7 @@ namespace ClassicUO.Game.UI.Controls
             Label _keyBinding;
             Add(_keyBinding = new Label
                 (
-                    "HotKey:",
+                    Language.Instance.Assistant.Macros.HotkeyLabel,
                     true,
                     0xFFFF,
                     60,
@@ -488,7 +502,7 @@ namespace ClassicUO.Game.UI.Controls
 
                         for (int i = 0; i < count; i++)
                         {
-                            names[i] = _allSubHotkeysNames[i + offset];
+                            names[i] = GetSubHotkeyName((MacroSubType)(i + offset));
                         }
 
                         var sub = new Combobox

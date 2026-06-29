@@ -4130,7 +4130,7 @@ namespace ClassicUO.LegionScripting
         {
             if (string.IsNullOrEmpty(name))
             {
-                GameActions.Print(World, "Var's must have a name.", 32);
+                GameActions.Print(World, Language.Instance.Messages.VarsMustHaveName, 32);
                 return;
             }
 
@@ -4150,7 +4150,7 @@ namespace ClassicUO.LegionScripting
         {
             if (string.IsNullOrEmpty(name))
             {
-                GameActions.Print(World, "Var's must have a name.", 32);
+                GameActions.Print(World, Language.Instance.Messages.VarsMustHaveName, 32);
                 return;
             }
 
@@ -4171,7 +4171,7 @@ namespace ClassicUO.LegionScripting
         {
             if (string.IsNullOrEmpty(name))
             {
-                GameActions.Print(World, "Var's must have a name.", 32);
+                GameActions.Print(World, Language.Instance.Messages.VarsMustHaveName, 32);
                 return defaultValue;
             }
 

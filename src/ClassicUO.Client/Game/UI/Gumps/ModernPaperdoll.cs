@@ -635,7 +635,9 @@ namespace ClassicUO.Game.UI.Gumps
 
                 int i = 1;
 
-                var preview = new NiceButton(1, 1, Width - 2, 20, ButtonAction.Activate, "Preview");
+                var lang = Language.Instance.LegacyGumps.PaperdollMenu;
+
+                var preview = new NiceButton(1, 1, Width - 2, 20, ButtonAction.Activate, lang.Preview);
                 preview.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -646,7 +648,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(preview);
 
-                var help = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Help");
+                var help = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Help);
                 help.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -656,7 +658,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(help);
 
-                var options = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Options");
+                var options = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Options);
                 options.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -666,7 +668,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(options);
 
-                var logout = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Log Out");
+                var logout = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.LogOut);
                 logout.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -676,7 +678,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(logout);
 
-                var quests = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Quests");
+                var quests = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Quests);
                 quests.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -686,7 +688,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(quests);
 
-                var skills = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Skills");
+                var skills = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Skills);
                 skills.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -696,7 +698,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(skills);
 
-                var guild = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Guild");
+                var guild = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Guild);
                 guild.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -706,7 +708,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(guild);
 
-                var peace = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Peace/War");
+                var peace = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.PeaceWar);
                 peace.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -716,7 +718,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(peace);
 
-                var durability = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Durability Tracker");
+                var durability = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.DurabilityTracker);
                 durability.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -727,7 +729,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(durability);
 
-                var status = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Status");
+                var status = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Status);
                 status.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -785,7 +787,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(status);
 
-                var party = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Party");
+                var party = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Party);
                 party.MouseUp += (s, e) =>
                 {
                     PartyGump party = UIManager.GetGump<PartyGump>();
@@ -803,14 +805,14 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(party);
 
-                var profileEditor = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Profile");
+                var profileEditor = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Profile);
                 profileEditor.MouseUp += (s, e) =>
                 {
                     GameActions.RequestProfile(LocalSerial);
                 };
                 Add(profileEditor);
 
-                var abilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Abilities");
+                var abilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.Abilities);
                 abilities.MouseUp += (s, e) =>
                 {
                     if (UIManager.GetGump<RacialAbilitiesBookGump>() == null)
@@ -820,7 +822,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(abilities);
 
-                var weaponAbilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Weapon abilities");
+                var weaponAbilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, lang.WeaponAbilities);
                 weaponAbilities.MouseUp += (s, e) =>
                 {
                     GameActions.OpenAbilitiesBook(world);
@@ -872,7 +874,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Add(_ = new Checkbox(0x00D2, 0x00D3) { X = 66, Y = 2 });
                 _.IsChecked = ProfileManager.CurrentProfile.OpenModernPaperdollAtMinimizeLoc;
-                _.SetTooltip("Open paperdoll at this location");
+                _.SetTooltip(Language.Instance.LegacyGumps.PaperdollMenu.OpenAtLocation);
                 _.MouseUp += (s, e) =>
                 {
                     ProfileManager.CurrentProfile.OpenModernPaperdollAtMinimizeLoc = _.IsChecked;

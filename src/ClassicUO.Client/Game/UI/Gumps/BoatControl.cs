@@ -1,3 +1,4 @@
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Controls;
 using static System.Net.Mime.MediaTypeNames;
 using System.Drawing;
@@ -70,7 +71,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Reg",
+                Language.Instance.LegacyGumps.Misc.Reg,
                 0xff,
                 0xffff
             )
@@ -85,7 +86,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Slow",
+                Language.Instance.LegacyGumps.Misc.Slow,
                 0xff,
                 0xffff
             )
@@ -141,7 +142,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return true;
             else
             {
-                GameActions.Print(World, "You need to be driving a boat to use this.");
+                GameActions.Print(World, Language.Instance.LegacyGumps.Misc.NeedToDriveBoat);
                 return false;
             }
         }

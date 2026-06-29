@@ -250,12 +250,12 @@ public static class GraphicReplacementTabContent
                 return;
             }
             GameActions.Print(lang.ClipboardInvalid, Constants.HUE_ERROR);
-        }) { Tooltip = "Import from your clipboard, must have a valid export copied." });
+        }) { Tooltip = lang.ImportTooltip });
         actionRow.Widgets.Add(new MyraButton(ui.Export, () =>
         {
             GraphicsReplacement.GetJsonExport()?.CopyToClipboard();
             GameActions.Print(lang.Exported, Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export your filters to your clipboard." });
+        }) { Tooltip = lang.ExportTooltip });
         actionRow.Widgets.Add(new MyraButton(lang.ApplyAll, () =>
         {
             World? world = World.Instance;

@@ -924,7 +924,7 @@ namespace ClassicUO.Game.Scenes
                 //Last ping > ~5 seconds
                 AsyncNetClient.Socket.Send_Resync();
                 _lastResync = Time.Ticks;
-                GameActions.Print(_world, "Possible connection hang, resync attempted", 32, MessageType.System);
+                GameActions.Print(_world, Language.Instance.Messages.PossibleConnectionHang, 32, MessageType.System);
             }
 
             _world.Update();

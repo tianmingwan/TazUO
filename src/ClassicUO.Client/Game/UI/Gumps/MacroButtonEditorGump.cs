@@ -61,7 +61,7 @@ namespace ClassicUO.Game.UI.Gumps
             CanMove = true;
             AcceptMouseInput = true;
             CanCloseWithRightClick = true;
-            _macro = Macro.CreateEmptyMacro("No Action");
+            _macro = Macro.CreateEmptyMacro(Language.Instance.Assistant.Macros.NoAction);
         }
         public MacroButtonEditorGump(World world, Macro macro, int x, int y) : this(world)
         {
@@ -90,7 +90,7 @@ namespace ClassicUO.Game.UI.Gumps
             Label _header;
             Add(_header = new Label
                 (
-                    $"Editor for {_macro.Name}",
+                    string.Format(Language.Instance.Assistant.Macros.EditorFor, _macro.Name),
                     true,
                     0xFFFF,
                     WIDTH,
@@ -155,7 +155,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Hide Label",
+                Language.Instance.Assistant.Macros.HideLabel,
                 0xFF,
                 0xFFFF
             )
@@ -174,8 +174,8 @@ namespace ClassicUO.Game.UI.Gumps
 
 
             var _ScaleLbl = new Label
-            (
-                    "Scale",
+                (
+                    Language.Instance.Assistant.Macros.Scale,
                     true,
                     0xFFFF,
                     50,
@@ -232,7 +232,7 @@ namespace ClassicUO.Game.UI.Gumps
             Label _ColorLabel;
             area.Add(_ColorLabel = new Label
                 (
-                    $"Color",
+                    Language.Instance.Assistant.Macros.Color,
                     true,
                     0xFFFF,
                     50,
@@ -247,7 +247,7 @@ namespace ClassicUO.Game.UI.Gumps
             Label _graphicLabel;
             area.Add(_graphicLabel = new Label
                 (
-                    $"Graphic",
+                    Language.Instance.Assistant.Macros.Graphic,
                     true,
                     0xFFFF,
                     50,

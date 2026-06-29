@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -24,7 +25,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     private MyraLabel _statusLabel = null!;
     private MyraLabel _countLabel = null!;
 
-    public ScriptConstantsEditorWindow(ScriptFile script) : base(script.FileName + " Constants")
+    public ScriptConstantsEditorWindow(ScriptFile script) : base(script.FileName + Language.Instance.LegacyGumps.ScriptConstantsEditor.TitleSuffix)
     {
         _script = script;
         ParseConstants();
@@ -54,7 +55,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new MyraInputBox { HintText = "Filter constants...", Width = 175, Text = _filterText };
+        var filterBox = new MyraInputBox { HintText = Language.Instance.LegacyGumps.ScriptConstantsEditor.FilterHint, Width = 175, Text = _filterText };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -62,8 +63,9 @@ public class ScriptConstantsEditorWindow : MyraControl
         };
         toolbar.Widgets.Add(filterBox);
 
-        toolbar.Widgets.Add(new MyraButton("Refresh", RefreshConstants));
-        toolbar.Widgets.Add(new MyraButton("Save", SaveConstants));
+        var ui = Language.Instance.UiCommons;
+        toolbar.Widgets.Add(new MyraButton(ui.Refresh, RefreshConstants));
+        toolbar.Widgets.Add(new MyraButton(ui.Save, SaveConstants));
 
         _statusLabel = new MyraLabel("", MyraLabel.TextStyle.P) { Visible = false };
         toolbar.Widgets.Add(_statusLabel);
@@ -78,7 +80,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     private void UpdateCountLabel()
     {
         int n = _constants.Count;
-        _countLabel.Text = $"({n} constant{(n != 1 ? "s" : "")})";
+        _countLabel.Text = string.Format(Language.Instance.LegacyGumps.ScriptConstantsEditor.ConstantCount, n);
     }
 
     private void ShowStatus(string text, float seconds)
@@ -102,22 +104,24 @@ public class ScriptConstantsEditorWindow : MyraControl
 
         if (list.Count == 0)
         {
+            var se = Language.Instance.LegacyGumps.ScriptConstantsEditor;
             if (string.IsNullOrWhiteSpace(_filterText))
             {
-                _constantsPanel.Widgets.Add(new MyraLabel("No constants found in script.\nConstants must be top-level assignments with UPPERCASE names.\nExample:  MAX_DISTANCE = 10", MyraLabel.TextStyle.P));
+                _constantsPanel.Widgets.Add(new MyraLabel(se.NoConstantsFound, MyraLabel.TextStyle.P));
             }
             else
             {
-                _constantsPanel.Widgets.Add(new MyraLabel("No constants match the filter.", MyraLabel.TextStyle.P));
+                _constantsPanel.Widgets.Add(new MyraLabel(se.NoConstantsMatch, MyraLabel.TextStyle.P));
             }
             return;
         }
 
         var grid = new MyraGrid();
+        var seL = Language.Instance.LegacyGumps.ScriptConstantsEditor;
         grid.SetupWithHeaders(
-            GridColumnInfo.Auto("Constant"),
-            GridColumnInfo.Fill("Value"),
-            GridColumnInfo.Auto("Line")
+            GridColumnInfo.Auto(seL.ColConstant),
+            GridColumnInfo.Fill(seL.ColValue),
+            GridColumnInfo.Auto(seL.ColLine)
         );
 
         int row = 1;
@@ -182,9 +186,9 @@ public class ScriptConstantsEditorWindow : MyraControl
         var row = new HorizontalStackPanel { Spacing = 4 };
         var readonlyBox = new MyraInputBox { Text = constant.EditValue, Enabled = false };
         if (constant.OriginalValue != constant.EditValue)
-            readonlyBox.Tooltip = $"Original: {original}";
+            readonlyBox.Tooltip = Language.Instance.LegacyGumps.ScriptConstantsEditor.OriginalPrefix + original;
         row.Widgets.Add(readonlyBox);
-        row.Widgets.Add(new MyraButton("Edit", () => ShowArrayEditor(constant)));
+        row.Widgets.Add(new MyraButton(Language.Instance.UiCommons.Edit, () => ShowArrayEditor(constant)));
         return row;
     }
 
@@ -210,10 +214,10 @@ public class ScriptConstantsEditorWindow : MyraControl
                 {
                     elementsCopy.RemoveAt(idx);
                     BuildElements();
-                }) { Tooltip = "Remove this element" }));
+                }) { Tooltip = Language.Instance.LegacyGumps.ScriptConstantsEditor.RemoveElementTooltip }));
                 elementsPanel.Widgets.Add(eRow);
             }
-            elementsPanel.Widgets.Add(new MyraButton("Add Element", () =>
+            elementsPanel.Widgets.Add(new MyraButton(Language.Instance.LegacyGumps.ScriptConstantsEditor.AddElement, () =>
             {
                 elementsCopy.Add("0");
                 BuildElements();
@@ -223,10 +227,10 @@ public class ScriptConstantsEditorWindow : MyraControl
         BuildElements();
 
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"Editing: {constant.Name}", MyraLabel.TextStyle.H3));
+        content.Widgets.Add(new MyraLabel(Language.Instance.LegacyGumps.ScriptConstantsEditor.EditingPrefix + constant.Name, MyraLabel.TextStyle.H3));
         content.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = elementsPanel });
 
-        new MyraDialog($"Array Editor: {constant.Name}", content, ok =>
+        new MyraDialog(Language.Instance.LegacyGumps.ScriptConstantsEditor.ArrayEditorPrefix + constant.Name, content, ok =>
         {
             if (!ok) return;
             constant.EditValue = "[" + string.Join(", ", elementsCopy) + "]";
@@ -239,8 +243,8 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         _hasUnsavedChanges = _constants.Values.Any(c => c.OriginalValue != c.EditValue);
         if (_hasUnsavedChanges)
-            ShowStatus("• Unsaved changes", 0);
-        else if (_statusLabel.Text == "• Unsaved changes")
+            ShowStatus(Language.Instance.LegacyGumps.ScriptConstantsEditor.UnsavedChanges, 0);
+        else if (_statusLabel.Text == Language.Instance.LegacyGumps.ScriptConstantsEditor.UnsavedChanges)
             _statusLabel.Visible = false;
     }
 
@@ -253,7 +257,7 @@ public class ScriptConstantsEditorWindow : MyraControl
         _hasUnsavedChanges = false;
         UpdateCountLabel();
         BuildConstantsGrid();
-        ShowStatus("Refreshed from file", 3);
+        ShowStatus(Language.Instance.LegacyGumps.ScriptConstantsEditor.RefreshedFromFile, 3);
     }
 
     private void SaveConstants()
@@ -262,7 +266,7 @@ public class ScriptConstantsEditorWindow : MyraControl
         {
             if (!_hasUnsavedChanges)
             {
-                ShowStatus("No changes to save", 2);
+                ShowStatus(Language.Instance.LegacyGumps.ScriptConstantsEditor.NoChangesToSave, 2);
                 return;
             }
 
@@ -284,12 +288,12 @@ public class ScriptConstantsEditorWindow : MyraControl
             }
 
             _hasUnsavedChanges = false;
-            ShowStatus("Saved successfully!", 3);
+            ShowStatus(Language.Instance.LegacyGumps.ScriptConstantsEditor.SavedSuccessfully, 3);
             BuildConstantsGrid();
         }
         catch (Exception ex)
         {
-            ShowStatus($"Error: {ex.Message}", 5);
+            ShowStatus(Language.Instance.LegacyGumps.Misc.ErrorPrefix + ex.Message, 5);
         }
     }
 

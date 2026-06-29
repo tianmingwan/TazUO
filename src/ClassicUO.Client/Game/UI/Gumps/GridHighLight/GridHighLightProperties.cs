@@ -1,4 +1,5 @@
 using System;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
@@ -35,6 +36,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private void Build()
         {
+            var lang = Language.Instance.LegacyGumps.GridHighlight;
             Clear();
             Positioner pos = new();
             IGui temp;
@@ -43,42 +45,33 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             Add(mainScrollArea = new ScrollArea(BorderSize, BorderSize, Width - (BorderSize * 2), Height - (BorderSize * 2), true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
 
             // Accept extra properties checkbox
-            string acceptExtraPropertiesTooltip =
-                "Highlight items with properties beyond your configuration.\n" +
-                "When checked: The item must match all configured properties and may have extra ones.\n" +
-                "When un-checked: The item must match all configured properties and must not have any extra properties.";
-
             Checkbox acceptExtraPropertiesCheckbox;
             mainScrollArea.Add(pos.Position(acceptExtraPropertiesCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = data.AcceptExtraProperties }));
-            acceptExtraPropertiesCheckbox.SetTooltip(acceptExtraPropertiesTooltip);
+            acceptExtraPropertiesCheckbox.SetTooltip(lang.ExtraPropsTooltip);
             acceptExtraPropertiesCheckbox.ValueChanged += (s, e) =>
             {
                 data.AcceptExtraProperties = acceptExtraPropertiesCheckbox.IsChecked;
             };
 
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Allow extra properties", true, 0xffff), acceptExtraPropertiesCheckbox));
+            mainScrollArea.Add(pos.PositionRightOf(new Label(lang.AllowExtraProperties, true, 0xffff), acceptExtraPropertiesCheckbox));
 
             // Loot on match checkbox
-            string lootOnMatchTooltip =
-                "Automatically loot items that match this highlight configuration.\n" +
-                "When checked: Items matching this configuration will be added to the auto loot queue.";
-
             Checkbox lootOnMatchCheckbox;
             mainScrollArea.Add(pos.Position(lootOnMatchCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = data.LootOnMatch }));
-            lootOnMatchCheckbox.SetTooltip(lootOnMatchTooltip);
+            lootOnMatchCheckbox.SetTooltip(lang.AutoLootTooltip);
             lootOnMatchCheckbox.ValueChanged += (s, e) =>
             {
                 data.LootOnMatch = lootOnMatchCheckbox.IsChecked;
             };
 
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Auto loot on match", true, 0xffff), lootOnMatchCheckbox));
+            mainScrollArea.Add(pos.PositionRightOf(new Label(lang.AutoLootOnMatch, true, 0xffff), lootOnMatchCheckbox));
 
             // Destination container input and target button
             InputField destinationInput;
             mainScrollArea.Add(pos.Position(destinationInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 100, 20)));
             string destStr = data.DestinationContainer == 0 ? "" : $"0x{data.DestinationContainer:X}";
             destinationInput.SetText(destStr);
-            destinationInput.SetTooltip("Optional destination container serial (leave empty to use default grab bag)");
+            destinationInput.SetTooltip(lang.LootContainerTooltip);
             destinationInput.TextChanged += (s, e) =>
             {
                 if (string.IsNullOrWhiteSpace(destinationInput.Text))
@@ -90,11 +83,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     data.DestinationContainer = destSerial;
                 }
             };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Loot to container", true, 0xffff), destinationInput));
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label(lang.LootToContainer, true, 0xffff), destinationInput));
 
             NiceButton targetContainerBtn;
-            mainScrollArea.Add(pos.PositionRightOf(targetContainerBtn = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, "Target") { IsSelectable = false }, temp, 10));
-            targetContainerBtn.SetTooltip("Target a container to loot items into");
+            mainScrollArea.Add(pos.PositionRightOf(targetContainerBtn = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, lang.Target) { IsSelectable = false }, temp, 10));
+            targetContainerBtn.SetTooltip(lang.TargetContainerTooltip);
             targetContainerBtn.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -125,10 +118,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 else
                 {
-                    minMatchingInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                    minMatchingInput.Add(new FadingLabel(20, lang.ParseNumberError, true, 0xff) { X = 0, Y = 0 });
                 }
             };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Min. matching count", true, 0xffff), minMatchingInput));
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label(lang.MinMatchingCount, true, 0xffff), minMatchingInput));
 
             InputField maxMatchingInput;
             mainScrollArea.Add(pos.PositionRightOf(maxMatchingInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20), temp, 20));
@@ -142,10 +135,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 else
                 {
-                    maxMatchingInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                    maxMatchingInput.Add(new FadingLabel(20, lang.ParseNumberError, true, 0xff) { X = 0, Y = 0 });
                 }
             };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Max. matching count", true, 0xffff), maxMatchingInput));
+            mainScrollArea.Add(pos.PositionRightOf(new Label(lang.MaxMatchingCount, true, 0xffff), maxMatchingInput));
 
             InputField minPropertiesInput;
             mainScrollArea.Add(pos.Position(minPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20)));
@@ -159,10 +152,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 else
                 {
-                    minPropertiesInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                    minPropertiesInput.Add(new FadingLabel(20, lang.ParseNumberError, true, 0xff) { X = 0, Y = 0 });
                 }
             };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Min. property count", true, 0xffff), minPropertiesInput));
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label(lang.MinPropertyCount, true, 0xffff), minPropertiesInput));
 
             InputField maxPropertiesInput;
             mainScrollArea.Add(pos.PositionRightOf(maxPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20), temp, 20));
@@ -176,15 +169,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 else
                 {
-                    maxPropertiesInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                    maxPropertiesInput.Add(new FadingLabel(20, lang.ParseNumberError, true, 0xff) { X = 0, Y = 0 });
                 }
             };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Max. property count", true, 0xffff), maxPropertiesInput));
+            mainScrollArea.Add(pos.PositionRightOf(new Label(lang.MaxPropertyCount, true, 0xffff), maxPropertiesInput));
 
             #region Name
 
             mainScrollArea.Add(pos.Position(SectionDivider()));
-            mainScrollArea.Add(pos.Position(new Label("Item name", true, 0xffff, 120)));
+            mainScrollArea.Add(pos.Position(new Label(lang.ItemName, true, 0xffff, 120)));
 
             for (int i = 0; i < data.ItemNames.Count; i++)
             {
@@ -193,7 +186,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }
 
             NiceButton addItemNameBtn;
-            mainScrollArea.Add(pos.Position(addItemNameBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Item Name") { IsSelectable = false }));
+            mainScrollArea.Add(pos.Position(addItemNameBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, lang.AddItemName) { IsSelectable = false }));
             addItemNameBtn.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -209,9 +202,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             #region Properties
 
             mainScrollArea.Add(pos.Position(SectionDivider()));
-            mainScrollArea.Add(new Label("Property name", true, 0xffff, 120) { X = 0, Y = pos.Y });
-            mainScrollArea.Add(new Label("Min value", true, 0xffff, 120) { X = mainScrollArea.Width - 38 - 63 - 75, Y = pos.Y });
-            mainScrollArea.Add(new Label("Optional", true, 0xffff, 120) { X = mainScrollArea.Width - 38 - 63, Y = pos.Y });
+            mainScrollArea.Add(new Label(lang.PropertyName, true, 0xffff, 120) { X = 0, Y = pos.Y });
+            mainScrollArea.Add(new Label(lang.MinValue, true, 0xffff, 120) { X = mainScrollArea.Width - 38 - 63 - 75, Y = pos.Y });
+            mainScrollArea.Add(new Label(lang.Optional, true, 0xffff, 120) { X = mainScrollArea.Width - 38 - 63, Y = pos.Y });
             pos.Y += 20;
 
             for (int i = 0; i < data.Properties.Count; i++)
@@ -221,7 +214,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }
 
             NiceButton addPropBtn;
-            mainScrollArea.Add(pos.Position(addPropBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Property") { IsSelectable = false }));
+            mainScrollArea.Add(pos.Position(addPropBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, lang.AddProperty) { IsSelectable = false }));
             addPropBtn.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -240,7 +233,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             mainScrollArea.Add(pos.Position(SectionDivider()));
             string[] slotNames = new[] { "Talisman", "RightHand", "LeftHand", "Head", "Earring", "Neck", "Chest", "Shirt", "Back", "Robe", "Arms", "Hands", "Bracelet", "Ring", "Belt", "Skirt", "Legs", "Footwear" };
 
-            mainScrollArea.Add(temp = pos.Position(new Label("Select equipment slots", true, 0xffff)));
+            mainScrollArea.Add(temp = pos.Position(new Label(lang.SelectEquipmentSlots, true, 0xffff)));
             Checkbox otherCheckbox;
             mainScrollArea.Add(pos.PositionRightOf(otherCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = (bool)typeof(GridHighlightSlot).GetProperty("Other").GetValue(data.EquipmentSlots) }, temp, 20));
             otherCheckbox.ValueChanged += (s, e) =>
@@ -256,7 +249,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 data.EquipmentSlots.Other = otherCheckbox.IsChecked;
             };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Other / No Slot Assigned", true, 0xffff), otherCheckbox));
+            mainScrollArea.Add(pos.PositionRightOf(new Label(lang.OtherNoSlot, true, 0xffff), otherCheckbox));
 
             int columns = Math.Max(1, (mainScrollArea.Width - 18) / 110);
 
@@ -275,7 +268,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 };
                 slotCheckboxes[slotName] = cb;
 
-                var label = new Label(SplitCamelCase(slotName), true, 0xFFFF);
+                var label = new Label(GetSlotDisplayName(slotName), true, 0xFFFF);
 
                 mainScrollArea.Add(pos.Position(cb));
                 mainScrollArea.Add(pos.PositionRightOf(label, cb));
@@ -288,26 +281,23 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             #region Negative
 
             mainScrollArea.Add(pos.Position(SectionDivider()));
-            mainScrollArea.Add(pos.Position(new Label("Disqualifying Properties", true, 0xffff)));
+            mainScrollArea.Add(pos.Position(new Label(lang.DisqualifyingProperties, true, 0xffff)));
 
-            // Weight filter
+            // Weight Filter
             Checkbox weightCheckbox;
             mainScrollArea.Add(pos.Position(weightCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = data.Overweight }));
-            string weightTooltip = "Enable weight-based filtering.\n" +
-                "Items with weight outside the specified range will be excluded.\n" +
-                "Set to 0 to disable min or max check.";
-            weightCheckbox.SetTooltip(weightTooltip);
+            weightCheckbox.SetTooltip(lang.WeightFilterTooltip);
             weightCheckbox.ValueChanged += (s, e) =>
             {
                 data.Overweight = weightCheckbox.IsChecked;
                 GridHighlightData.RecheckMatchStatus();
             };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Weight filter", true, 0xffff), weightCheckbox));
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label(lang.WeightFilter, true, 0xffff), weightCheckbox));
 
             InputField minWeightInput;
             mainScrollArea.Add(pos.PositionRightOf(minWeightInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { NumbersOnly = true }, temp, 10));
             minWeightInput.SetText(data.MinimumWeight.ToString());
-            minWeightInput.SetTooltip("Minimum weight (0 = no minimum)");
+            minWeightInput.SetTooltip(lang.MinWeightTooltip);
             minWeightInput.TextChanged += (s, e) =>
             {
                 if (int.TryParse(minWeightInput.Text, out int val))
@@ -317,15 +307,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 else
                 {
-                    minWeightInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                    minWeightInput.Add(new FadingLabel(20, lang.ParseNumberError, true, 0xff) { X = 0, Y = 0 });
                 }
             };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Min", true, 0xffff), minWeightInput));
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label(lang.Min, true, 0xffff), minWeightInput));
 
             InputField maxWeightInput;
             mainScrollArea.Add(pos.PositionRightOf(maxWeightInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { NumbersOnly = true }, temp, 10));
             maxWeightInput.SetText(data.MaximumWeight.ToString());
-            maxWeightInput.SetTooltip("Maximum weight (0 = no maximum)");
+            maxWeightInput.SetTooltip(lang.MaxWeightTooltip);
             maxWeightInput.TextChanged += (s, e) =>
             {
                 if (int.TryParse(maxWeightInput.Text, out int val))
@@ -335,12 +325,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 else
                 {
-                    maxWeightInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                    maxWeightInput.Add(new FadingLabel(20, lang.ParseNumberError, true, 0xff) { X = 0, Y = 0 });
                 }
             };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Max", true, 0xffff), maxWeightInput));
+            mainScrollArea.Add(pos.PositionRightOf(new Label(lang.Max, true, 0xffff), maxWeightInput));
 
-            mainScrollArea.Add(pos.Position(new Label("Items with any of these properties will be excluded", true, 0xffff)));
+            mainScrollArea.Add(pos.Position(new Label(lang.DisqualifyingDesc, true, 0xffff)));
 
             for (int i = 0; i < data.ExcludeNegatives.Count; i++)
             {
@@ -348,7 +338,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 pos.Y += 25;
             }
 
-            mainScrollArea.Add(pos.Position(addItemNameBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Disqualifying Property") { IsSelectable = false }));
+            mainScrollArea.Add(pos.Position(addItemNameBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, lang.AddDisqualifyingProperty) { IsSelectable = false }));
             addItemNameBtn.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -366,8 +356,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             mainScrollArea.Add(pos.Position(SectionDivider()));
 
-            mainScrollArea.Add(pos.Position(new Label("Item Rarity Filters", true, 0xffff)));
-            mainScrollArea.Add(pos.Position(new Label("Only items with at least one of these rarities will match", true, 0xffff)));
+            mainScrollArea.Add(pos.Position(new Label(lang.ItemRarityFilters, true, 0xffff)));
+            mainScrollArea.Add(pos.Position(new Label(lang.RarityDesc, true, 0xffff)));
 
             for (int i = 0; i < data.RequiredRarities.Count; i++)
             {
@@ -376,7 +366,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }
 
             NiceButton addRarityBtn;
-            mainScrollArea.Add(pos.Position(addRarityBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Rarity Filter") { IsSelectable = false }));
+            mainScrollArea.Add(pos.Position(addRarityBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, lang.AddRarityFilter) { IsSelectable = false }));
             addRarityBtn.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -393,7 +383,35 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private Control SectionDivider() => new Line(0, 0, mainScrollArea.Width - 20, 1, Color.Gray.PackedValue);
 
-        private string SplitCamelCase(string input) => System.Text.RegularExpressions.Regex.Replace(input, "(\\B[A-Z])", " $1");
+        private static string SplitCamelCase(string input) => System.Text.RegularExpressions.Regex.Replace(input, "(\\B[A-Z])", " $1");
+
+        // Maps an equipment-slot reflection key to its localized display name.
+        private static string GetSlotDisplayName(string slotKey)
+        {
+            var lang = Language.Instance.LegacyGumps.GridHighlight;
+            return slotKey switch
+            {
+                "Talisman" => lang.SlotTalisman,
+                "RightHand" => lang.SlotRightHand,
+                "LeftHand" => lang.SlotLeftHand,
+                "Head" => lang.SlotHead,
+                "Earring" => lang.SlotEarring,
+                "Neck" => lang.SlotNeck,
+                "Chest" => lang.SlotChest,
+                "Shirt" => lang.SlotShirt,
+                "Back" => lang.SlotBack,
+                "Robe" => lang.SlotRobe,
+                "Arms" => lang.SlotArms,
+                "Hands" => lang.SlotHands,
+                "Bracelet" => lang.SlotBracelet,
+                "Ring" => lang.SlotRing,
+                "Belt" => lang.SlotBelt,
+                "Skirt" => lang.SlotSkirt,
+                "Legs" => lang.SlotLegs,
+                "Footwear" => lang.SlotFootwear,
+                _ => SplitCamelCase(slotKey),
+            };
+        }
 
         private void AddOther(List<string> others, int index, int y, HashSet<string>[] propertySets = null)
         {
@@ -426,8 +444,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             };
 
             NiceButton _del;
-            mainScrollArea.Add(_del = new NiceButton(mainScrollArea.Width - 38, y, 20, 20, ButtonAction.Activate, "X") { IsSelectable = false });
-            _del.SetTooltip("Delete this property");
+            mainScrollArea.Add(_del = new NiceButton(mainScrollArea.Width - 38, y, 20, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.GridHighlight.Delete) { IsSelectable = false });
+            _del.SetTooltip(Language.Instance.LegacyGumps.GridHighlight.DeletePropertyTooltip);
             _del.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -477,7 +495,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
                 else
                 {
-                    valInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                    valInput.Add(new FadingLabel(20, Language.Instance.LegacyGumps.GridHighlight.ParseNumberError, true, 0xff) { X = 0, Y = 0 });
                 }
             };
 
@@ -489,8 +507,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             };
 
             NiceButton _del;
-            mainScrollArea.Add(_del = new NiceButton(mainScrollArea.Width - 38, y, 20, 20, ButtonAction.Activate, "X") { IsSelectable = false });
-            _del.SetTooltip("Delete this property");
+            mainScrollArea.Add(_del = new NiceButton(mainScrollArea.Width - 38, y, 20, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.GridHighlight.Delete) { IsSelectable = false });
+            _del.SetTooltip(Language.Instance.LegacyGumps.GridHighlight.DeletePropertyTooltip);
             _del.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)

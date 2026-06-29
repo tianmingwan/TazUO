@@ -179,7 +179,7 @@ namespace ClassicUO.Game.Managers
             {
                 if (!Directory.Exists(p))
                 {
-                    GameActions.Print(World.Instance, "Directory doesn't exist!", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, Language.Instance.Messages.DirectoryDoesntExist, Constants.HUE_ERROR);
                     return;
                 }
 
@@ -188,11 +188,11 @@ namespace ClassicUO.Game.Managers
                     string result = JsonSerializer.Serialize(allData);
                     string path = Path.Combine(p, "tooltip_overrides.json");
                     File.WriteAllText(path, result);
-                    GameActions.Print(World.Instance, $"The override file has been saved to [{path}]");
+                    GameActions.Print(World.Instance, string.Format(Language.Instance.Messages.OverrideFileSavedTo, path));
                 }
                 catch (Exception e)
                 {
-                    GameActions.Print(World.Instance, "Failed to save the override file!", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, Language.Instance.Messages.FailedToSaveOverrideFile, Constants.HUE_ERROR);
                     Log.Error(e.ToString());
                 }
             }));
@@ -202,7 +202,7 @@ namespace ClassicUO.Game.Managers
                                                                 {
                                                                     if (!File.Exists(p))
                                                                     {
-                                                                        GameActions.Print(World.Instance, "File doesn't exist!", Constants.HUE_ERROR);
+                                                                        GameActions.Print(World.Instance, Language.Instance.Messages.FileDoesntExist, Constants.HUE_ERROR);
                                                                         return;
                                                                     }
 
@@ -215,12 +215,12 @@ namespace ClassicUO.Game.Managers
                                                                         foreach (ToolTipOverrideData importedData in imported)
                                                                             new ToolTipOverrideData(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer).Save();
 
-                                                                        GameActions.Print(World.Instance, $"Imported {imported.Length} tooltip overrides!");
+                                                                        GameActions.Print(World.Instance, string.Format(Language.Instance.Messages.ImportedTooltipOverrides, imported.Length));
                                                                     }
                                                                     catch (System.Exception e)
                                                                     {
                                                                         Log.Error(e.ToString());
-                                                                        GameActions.Print(World.Instance, "It looks like there was an error trying to import your override settings.", Constants.HUE_ERROR);
+                                                                        GameActions.Print(World.Instance, Language.Instance.Messages.ImportOverrideError, Constants.HUE_ERROR);
                                                                     }
                                                                 }));
 

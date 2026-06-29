@@ -33,16 +33,17 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private void BuildGump()
         {
+            var lang = Language.Instance.LegacyGumps.GridHighlight;
             Clear();
             int y = 0;
             {
-                var section = new SettingsSection("Grid highlighting settings", Width - (BorderSize * 2));
+                var section = new SettingsSection(lang.Header, Width - (BorderSize * 2));
                 section.X = BorderSize;
                 section.Y = BorderSize;
-                section.Add(new Label("You can add object properties that you would like the grid to be highlighted for here.", true, 0xffff, section.Width - 15));
+                section.Add(new Label(lang.Description, true, 0xffff, section.Width - 15));
 
                 NiceButton _;
-                section.Add(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, "Add +") { IsSelectable = false });
+                section.Add(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, lang.Add) { IsSelectable = false });
                 _.MouseUp += (s, e) =>
                 {
                     if (e.Button == Input.MouseButtonType.Left)
@@ -52,7 +53,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     }
                 };
 
-                section.AddRight(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, "Export") { IsSelectable = false });
+                section.AddRight(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, lang.Export) { IsSelectable = false });
                 _.MouseUp += (s, e) =>
                 {
                     if (e.Button == Input.MouseButtonType.Left)
@@ -61,7 +62,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     }
                 };
 
-                section.AddRight(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, "Import") { IsSelectable = false });
+                section.AddRight(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, lang.Import) { IsSelectable = false });
                 _.MouseUp += (s, e) =>
                 {
                     if (e.Button == Input.MouseButtonType.Left)
@@ -71,7 +72,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     }
                 };
 
-                section.AddRight(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, "Configs") { IsSelectable = false });
+                section.AddRight(_ = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, lang.Configs) { IsSelectable = false });
                 _.MouseUp += (s, e) =>
                 {
                     if (e.Button == Input.MouseButtonType.Left)
@@ -100,6 +101,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private Area NewAreaSection(int keyLoc, int y)
         {
+            var lang = Language.Instance.LegacyGumps.GridHighlight;
             var pos = new Positioner(0, 0, 0, 0);
             var data = GridHighlightData.GetGridHighlightData(keyLoc);
             var area = new Area() { Y = y, X = BorderSize };
@@ -109,8 +111,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             int spaceBetween = 7;
 
             NiceButton colorButton;
-            area.Add(colorButton = new NiceButton(0, y, 60, 20, ButtonAction.Activate, "Color") { BackgroundColor = data.HighlightColor, IsSelectable = false });
-            colorButton.SetTooltip("Select grid highlight color");
+            area.Add(colorButton = new NiceButton(0, y, 60, 20, ButtonAction.Activate, lang.Color) { BackgroundColor = data.HighlightColor, IsSelectable = false });
+            colorButton.SetTooltip(lang.ColorTooltip);
             colorButton.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -126,7 +128,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             };
 
             NiceButton _propertiesButton;
-            area.Add(_propertiesButton = new NiceButton(0, y, 60, 20, ButtonAction.Activate, "Properties") { IsSelectable = false });
+            area.Add(_propertiesButton = new NiceButton(0, y, 60, 20, ButtonAction.Activate, lang.Properties) { IsSelectable = false });
             _propertiesButton.MouseUp += (s, e) =>
            {
                if (e.Button == Input.MouseButtonType.Left)
@@ -137,8 +139,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
            };
 
             NiceButton _del;
-            area.Add(_del = new NiceButton(0, y, 20, 20, ButtonAction.Activate, "X") { IsSelectable = false });
-            _del.SetTooltip("Delete this highlight configuration");
+            area.Add(_del = new NiceButton(0, y, 20, 20, ButtonAction.Activate, lang.Delete) { IsSelectable = false });
+            _del.SetTooltip(lang.DeleteConfigTooltip);
             _del.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -150,8 +152,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             };
 
             NiceButton _moveUp;
-            area.Add(_moveUp = new NiceButton(0, y, 40, 20, ButtonAction.Activate, "Up") { IsSelectable = false });
-            _moveUp.SetTooltip("Move this up in the list");
+            area.Add(_moveUp = new NiceButton(0, y, 40, 20, ButtonAction.Activate, lang.Up) { IsSelectable = false });
+            _moveUp.SetTooltip(lang.UpTooltip);
             _moveUp.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -163,8 +165,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             };
 
             NiceButton _moveDown;
-            area.Add(_moveDown = new NiceButton(area.Width - 40, y, 40, 20, ButtonAction.Activate, "Down") { IsSelectable = false });
-            _moveDown.SetTooltip("Move this down in the list");
+            area.Add(_moveDown = new NiceButton(area.Width - 40, y, 40, 20, ButtonAction.Activate, lang.Down) { IsSelectable = false });
+            _moveDown.SetTooltip(lang.DownTooltip);
             _moveDown.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
@@ -205,14 +207,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private static void ExportGridHighlightSettings(World world)
         {
+            var lang = Language.Instance.LegacyGumps.GridHighlight;
             List<GridHighlightSetupEntry> data = ProfileManager.CurrentProfile.GridHighlightSetup;
 
-            RunFileDialog(world, true, "Save grid highlight settings", file =>
+            RunFileDialog(world, true, lang.SaveDialogTitle, file =>
             {
                 if (Directory.Exists(file))
                 {
                     // If the path is a directory, append default filename
-                    file = Path.Combine(file, "highlights.json");
+                    file = Path.Combine(file, lang.DefaultFileName);
                 }
                 else if (!Path.HasExtension(file))
                 {
@@ -222,12 +225,13 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                 string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(file, json);
-                GameActions.Print(world, $"Saved highlight export to: {file}");
+                GameActions.Print(world, string.Format(lang.ExportedTo, file));
             });
         }
 
-        private static void ImportGridHighlightSettings(World world) => RunFileDialog(world, false, "Import grid highlight settings", file =>
+        private static void ImportGridHighlightSettings(World world) => RunFileDialog(world, false, Language.Instance.LegacyGumps.GridHighlight.ImportDialogTitle, file =>
                                                                                  {
+                                                                                     var lang = Language.Instance.LegacyGumps.GridHighlight;
                                                                                      try
                                                                                      {
                                                                                          if (!File.Exists(file))
@@ -241,12 +245,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                                                                                              SaveProfile();
                                                                                              UIManager.GetGump<GridHighlightMenu>()?.Dispose();
                                                                                              UIManager.Add(new GridHighlightMenu(world));
-                                                                                             GameActions.Print(world, $"Imported highlight config from: {file}");
+                                                                                             GameActions.Print(world, string.Format(lang.ImportedFrom, file));
                                                                                          }
                                                                                      }
                                                                                      catch (Exception ex)
                                                                                      {
-                                                                                         GameActions.Print(world, "Error importing highlight config", Constants.HUE_ERROR);
+                                                                                         GameActions.Print(world, lang.ImportError, Constants.HUE_ERROR);
                                                                                          Log.Error(ex.ToString());
                                                                                      }
                                                                                  });

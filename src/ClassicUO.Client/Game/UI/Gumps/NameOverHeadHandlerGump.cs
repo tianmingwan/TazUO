@@ -54,7 +54,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     0x00D2,
                     0x00D3,
-                    "Stay active",
+                    Language.Instance.LegacyGumps.Misc.StayActive,
                     color: 0xFFFF
                 )
                 {
@@ -78,7 +78,7 @@ namespace ClassicUO.Game.UI.Gumps
                     X = stayActive.Width + stayActive.X + 5
                 }
             );
-            hideFullHp.SetTooltip("Hide nameplates above 100% health.");
+            hideFullHp.SetTooltip(Language.Instance.LegacyGumps.Misc.HideAbove100Tooltip);
             hideFullHp.ValueChanged += (sender, e) => { ProfileManager.CurrentProfile.NamePlateHideAtFullHealth = hideFullHp.IsChecked; };
 
 
@@ -96,7 +96,7 @@ namespace ClassicUO.Game.UI.Gumps
                     X = hideFullHp.Width + hideFullHp.X + 5
                 }
             );
-            hideInWarmode.SetTooltip("Only hide 100% hp nameplates in warmode.");
+            hideInWarmode.SetTooltip(Language.Instance.LegacyGumps.Misc.Hide100WarmodeTooltip);
             hideInWarmode.ValueChanged += (sender, e) => { ProfileManager.CurrentProfile.NamePlateHideAtFullHealthInWarmode = hideInWarmode.IsChecked; };
 
 

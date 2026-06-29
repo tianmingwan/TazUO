@@ -24,19 +24,20 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             Add(new AlphaBlendControl(0.85f) { Width = Width, Height = HEIGHT });
 
+            var lang = Language.Instance.LegacyGumps.GridHighlight;
             Label label;
-            Add(label = new Label("Properties configuration (separated by a new line)", true, 0xffff) { X = 0, Y = lastYitem });
+            Add(label = new Label(lang.ConfigHeader, true, 0xffff) { X = 0, Y = lastYitem });
 
             lastYitem += 20;
 
             List<(string Label, HashSet<string> Set)> categories = new()
                 {
-                    ("Properties", GridHighlightRules.Properties),
-                    ("Super slayers", GridHighlightRules.SuperSlayerProperties),
-                    ("Slayers", GridHighlightRules.SlayerProperties),
-                    ("Resistances", GridHighlightRules.Resistances),
-                    ("Negatives", GridHighlightRules.NegativeProperties),
-                    ("Rarity", GridHighlightRules.RarityProperties)
+                    (lang.CatProperties, GridHighlightRules.Properties),
+                    (lang.CatSuperSlayers, GridHighlightRules.SuperSlayerProperties),
+                    (lang.CatSlayers, GridHighlightRules.SlayerProperties),
+                    (lang.CatResistances, GridHighlightRules.Resistances),
+                    (lang.CatNegatives, GridHighlightRules.NegativeProperties),
+                    (lang.CatRarity, GridHighlightRules.RarityProperties)
                 };
             foreach ((string labelText, HashSet<string> propSet) in categories)
             {
@@ -70,7 +71,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                             ProfileManager.CurrentProfile.ConfigurableProperties = parsed;
                             GridHighlightRules.SaveGridHighlightConfiguration();
-                            propertiesPropInput.Add(new FadingLabel(10, "Saved", true, 0xff) { X = 0, Y = 0 });
+                            propertiesPropInput.Add(new FadingLabel(10, Language.Instance.LegacyGumps.GridHighlight.Saved, true, 0xff) { X = 0, Y = 0 });
                         }
                     }
                     catch (TaskCanceledException) { }

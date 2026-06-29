@@ -497,7 +497,7 @@ namespace ClassicUO.Game.Managers
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, Language.Instance.Assistant.Macros.MustTargetMobileToSetMount, 32);
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
@@ -511,16 +511,16 @@ namespace ClassicUO.Game.Managers
                             if (item != null && item.ItemData.IsContainer)
                             {
                                 ProfileManager.CurrentProfile.SetFavoriteMoveBagSerial = serial;
-                                GameActions.Print(_world, "Favorite move bag set.");
+                                GameActions.Print(_world, Language.Instance.Assistant.Macros.FavoriteMoveBagSet);
                             }
                             else
                             {
-                                GameActions.Print(_world, "That doesn't appear to be a valid container.");
+                                GameActions.Print(_world, Language.Instance.Assistant.Macros.NotAValidContainer);
                             }
                         }
                         else
                         {
-                            GameActions.Print(_world, "That is not a valid item.");
+                            GameActions.Print(_world, Language.Instance.Assistant.Macros.NotAValidItem);
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
@@ -559,7 +559,7 @@ namespace ClassicUO.Game.Managers
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, Language.Instance.Assistant.Macros.MustTargetMobileToSetMount, 32);
                         }
                         ClearTargetingWithoutTargetCancelPacket();
                         return;

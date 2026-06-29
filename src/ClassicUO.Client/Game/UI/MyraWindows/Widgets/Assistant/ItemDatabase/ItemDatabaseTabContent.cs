@@ -247,7 +247,7 @@ public static class ItemDatabaseTabContent
 
         var advancedPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
 
-        containerBox = new MyraInputBox { Text = "0", Width = 120, Tooltip = "Search only in this container serial (0 = any)" };
+        containerBox = new MyraInputBox { Text = "0", Width = 120, Tooltip = Language.Instance.Assistant.ItemDatabase.SearchContainerTooltip };
         containerBox.TextChangedByUser += (_, _) =>
         {
             if (StringHelper.TryParseInt(containerBox.Text ?? "", out int c)) searchContainer = c;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
@@ -30,11 +31,11 @@ namespace ClassicUO.Game.UI.Gumps
         private string _title;
         private FileSelectorType _type;
 
-        public FileSelector(World world, FileSelectorType type, string initialPath = null, string[] fileExtensions = null, Action<string> onFileSelected = null, string title = "File Browser")
+        public FileSelector(World world, FileSelectorType type, string initialPath = null, string[] fileExtensions = null, Action<string> onFileSelected = null, string title = null)
             : base(world, 0, 0)
         {
             _type = type;
-            _title = title;
+            _title = title ?? Language.Instance.LegacyGumps.Misc.FileBrowser;
 
             if (!string.IsNullOrEmpty(initialPath))
                 _currentPath = initialPath;
@@ -81,13 +82,13 @@ namespace ClassicUO.Game.UI.Gumps
             });
 
             // Close button
-            Add(new NiceButton(GUMP_WIDTH - 80, 5, 75, 20, ButtonAction.Activate, "Close")
+            Add(new NiceButton(GUMP_WIDTH - 80, 5, 75, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.Misc.Close)
             {
                 ButtonParameter = 0
             });
 
             // Current path display
-            Add(new Label("Current Path:", true, 0x0386, font: 1)
+            Add(new Label(Language.Instance.LegacyGumps.Misc.CurrentPath, true, 0x0386, font: 1)
             {
                 X = 20,
                 Y = 35
@@ -99,7 +100,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_pathTextBox);
 
             // File extension filter
-            Add(new Label("Filter:", true, 0x0386, font: 1)
+            Add(new Label(Language.Instance.LegacyGumps.Misc.Filter, true, 0x0386, font: 1)
             {
                 X = 20,
                 Y = 85
@@ -119,7 +120,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Selected file name
             Control c;
-            Add(c = new Label("File Name:", true, 0x0386, font: 1)
+            Add(c = new Label(Language.Instance.LegacyGumps.Misc.FileName, true, 0x0386, font: 1)
             {
                 X = 20,
                 Y = GUMP_HEIGHT - 40
@@ -131,19 +132,19 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_fileNameTextBox);
 
             // OK button
-            Add(new NiceButton(GUMP_WIDTH - 180, 477, 75, 20, ButtonAction.Activate, "OK")
+            Add(new NiceButton(GUMP_WIDTH - 180, 477, 75, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.Misc.OK)
             {
                 ButtonParameter = 3
             });
 
             // Cancel button
-            Add(new NiceButton(GUMP_WIDTH - 90, 477, 75, 20, ButtonAction.Activate, "Cancel")
+            Add(new NiceButton(GUMP_WIDTH - 90, 477, 75, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.Misc.Cancel)
             {
                 ButtonParameter = 4
             });
 
             // Status label
-            _statusLabel = new Label("Ready", true, 0x0386, font: 1)
+            _statusLabel = new Label(Language.Instance.LegacyGumps.Misc.Ready, true, 0x0386, font: 1)
             {
                 X = 20,
                 Y = GUMP_HEIGHT - 20
@@ -153,13 +154,14 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void RefreshFileList()
         {
+            var lang = Language.Instance.LegacyGumps.Misc;
             const int BUTTON_WIDTH = GUMP_WIDTH - 60;
             _scrollVBox.Clear();
 
             try
             {
                 string dirc = _currentPath;
-                var dirButtonUp = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, $"(Current Dir)", align: TEXT_ALIGN_TYPE.TS_LEFT, hue:693);
+                var dirButtonUp = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, lang.CurrentDir, align: TEXT_ALIGN_TYPE.TS_LEFT, hue:693);
                 if (_type == FileSelectorType.Directory)
                     dirButtonUp.MouseUp += (sender, e) => SelectFile(dirc);
                 _scrollVBox.Add(dirButtonUp);
@@ -168,7 +170,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if(parent != null)
                 {
                     string dirp = parent.FullName;
-                    dirButtonUp = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, $"(Parent Dir)",
+                    dirButtonUp = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, lang.ParentDir,
                         align: TEXT_ALIGN_TYPE.TS_LEFT, hue: 693);
                     if (_type == FileSelectorType.Directory)
                         dirButtonUp.MouseUp += (sender, e) => SelectFile(dirp);
@@ -186,7 +188,7 @@ namespace ClassicUO.Game.UI.Gumps
                             string driveName = $"{drive.Name} ({drive.DriveType})";
                             var driveButton = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, driveName,
                                 align: TEXT_ALIGN_TYPE.TS_LEFT, hue: 692);
-                            
+
                             if (_type == FileSelectorType.Directory)
                                 driveButton.MouseUp += (sender, e) => SelectFile(drive.RootDirectory.FullName);
                             driveButton.MouseDoubleClick += (sender, e) => NavigateToDirectory(drive.RootDirectory.FullName);
@@ -195,13 +197,13 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     catch (Exception ex)
                     {
-                        _statusLabel.Text = $"Error loading drives: {ex.Message}";
+                        _statusLabel.Text = lang.ErrorLoadingDrives + ex.Message;
                     }
                 }
 
                 if (!Directory.Exists(_currentPath))
                 {
-                    _statusLabel.Text = "Invalid directory path";
+                    _statusLabel.Text = lang.InvalidDirectoryPath;
                     return;
                 }
 
@@ -237,11 +239,11 @@ namespace ClassicUO.Game.UI.Gumps
                     _scrollVBox.Add(fileButton);
                 }
 
-                _statusLabel.Text = $"Found {directories.Length} directories and {files.Length} files";
+                _statusLabel.Text = string.Format(Language.Instance.LegacyGumps.Misc.FoundDirsFiles, directories.Length, files.Length);
             }
             catch (Exception ex)
             {
-                _statusLabel.Text = $"Error: {ex.Message}";
+                _statusLabel.Text = Language.Instance.LegacyGumps.Misc.ErrorPrefix + ex.Message;
             }
         }
 

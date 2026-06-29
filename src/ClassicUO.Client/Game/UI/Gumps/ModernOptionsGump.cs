@@ -5243,8 +5243,22 @@ namespace ClassicUO.Game.UI.Gumps
 
         private class MacroControl : Control
         {
-            private static readonly string[] _allHotkeysNames = Enum.GetNames(typeof(MacroType));
-            private static readonly string[] _allSubHotkeysNames = Enum.GetNames(typeof(MacroSubType));
+            // Localized macro type display names, indexed by MacroType enum value.
+            // Rebuilt on each access so live language switches are reflected.
+            private static string[] _allHotkeysNames
+            {
+                get
+                {
+                    MacroType[] values = (MacroType[])Enum.GetValues(typeof(MacroType));
+                    string[] names = new string[values.Length];
+                    for (int i = 0; i < values.Length; i++)
+                        names[(int)values[i]] = UI.MyraWindows.Widgets.Assistant.Macros.MacrosTabContent.GetMacroTypeName(values[i]);
+                    return names;
+                }
+            }
+
+            private static string GetSubHotkeyName(MacroSubType s) => UI.MyraWindows.Widgets.Assistant.Macros.MacrosTabContent.GetMacroSubTypeName(s);
+
             private readonly DataBox _databox;
             private readonly HotkeyBox _hotkeyBox;
 
@@ -5655,54 +5669,41 @@ namespace ClassicUO.Game.UI.Gumps
 
                             for (int i = 0; i < count; i++)
                             {
-                                names[i] = _allSubHotkeysNames[i + offset];
+                                names[i] = GetSubHotkeyName((MacroSubType)(i + offset));
                             }
 
+                            // CastSpell should only offer actual spells. Drop any non-spell enum members
+                            // that fall inside the bound range. Filter by enum member NAME so it works
+                            // regardless of the localized display string.
                             if (obj.Code == MacroType.CastSpell)
                             {
                                 var namesList = new List<string>(names);
+                                var dropNames = new HashSet<string>(StringComparer.Ordinal)
+                                {
+                                    "Hostile", "Party", "Follower", "Object", "Mobile", "MscTotalCount",
+                                    "INVALID_0", "INVALID_1", "INVALID_2", "INVALID_3",
+                                    "ConfusionBlastPotion", "CurePotion", "AgilityPotion", "StrengthPotion",
+                                    "PoisonPotion", "RefreshPotion", "HealPotion", "ExplosionPotion",
+                                    "DefaultZoom", "ZoomIn", "ZoomOut",
+                                    "BestHealPotion", "BestCurePotion", "BestRefreshPotion", "BestStrengthPotion",
+                                    "BestAgiPotion", "BestExplosionPotion", "BestConflagPotion",
+                                    "EnchantedApple", "PetalsOfTrinsic", "OrangePetals", "TrappedBox",
+                                    "SmokeBomb", "HealStone", "SpellStone",
+                                    "LookForwards", "LookBackwards",
+                                };
 
-                                namesList.Remove("Hostile");
-                                namesList.Remove("Party");
-                                namesList.Remove("Follower");
-                                namesList.Remove("Object");
-                                namesList.Remove("Mobile");
-                                namesList.Remove("MscTotalCount");
-                                namesList.Remove("INVALID_0");
-                                namesList.Remove("INVALID_1");
-                                namesList.Remove("INVALID_2");
-                                namesList.Remove("INVALID_3");
-                                namesList.Remove("ConfusionBlastPotion");
-                                namesList.Remove("CurePotion");
-                                namesList.Remove("AgilityPotion");
-                                namesList.Remove("StrengthPotion");
-                                namesList.Remove("PoisonPotion");
-                                namesList.Remove("RefreshPotion");
-                                namesList.Remove("HealPotion");
-                                namesList.Remove("ExplosionPotion");
-
-                                namesList.Remove("DefaultZoom");
-                                namesList.Remove("ZoomIn");
-                                namesList.Remove("ZoomOut");
-
-                                namesList.Remove("BestHealPotion");
-                                namesList.Remove("BestCurePotion");
-                                namesList.Remove("BestRefreshPotion");
-                                namesList.Remove("BestStrengthPotion");
-                                namesList.Remove("BestAgiPotion");
-                                namesList.Remove("BestExplosionPotion");
-                                namesList.Remove("BestConflagPotion");
-                                namesList.Remove("EnchantedApple");
-                                namesList.Remove("PetalsOfTrinsic");
-                                namesList.Remove("OrangePetals");
-                                namesList.Remove("TrappedBox");
-                                namesList.Remove("SmokeBomb");
-                                namesList.Remove("HealStone");
-                                namesList.Remove("SpellStone");
-
-                                namesList.Remove("LookForwards");
-                                namesList.Remove("LookBackwards");
-                                names = namesList.ToArray();
+                                // Rebuild the list pairing each display name with its enum member name,
+                                // dropping filtered entries.
+                                var filtered = new List<string>(namesList.Count);
+                                for (int idx = 0; idx < count; idx++)
+                                {
+                                    MacroSubType st = (MacroSubType)(idx + offset);
+                                    string? memberName = Enum.GetName(typeof(MacroSubType), st);
+                                    if (memberName != null && dropNames.Contains(memberName))
+                                        continue;
+                                    filtered.Add(namesList[idx]);
+                                }
+                                names = filtered.ToArray();
                             }
 
                             var sub = new ComboBoxWithLabel

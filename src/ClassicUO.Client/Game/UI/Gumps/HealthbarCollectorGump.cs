@@ -87,7 +87,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_background);
 
             // Title label
-            var titleLabel = new Label("Healthbar Collector", true, 0x0481, font: 1)
+            var titleLabel = new Label(Language.Instance.LegacyGumps.Misc.HealthbarCollector, true, 0x0481, font: 1)
             {
                 X = 5,
                 Y = 8
@@ -95,7 +95,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(titleLabel);
 
             // Notorieties button
-            _notorietiesButton = new NiceButton(5, 28, 55, 20, ButtonAction.Activate, "Filter")
+            _notorietiesButton = new NiceButton(5, 28, 55, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.Misc.HbcFilter)
             {
                 IsSelectable = false,
                 ButtonParameter = 0
@@ -104,7 +104,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_notorietiesButton);
 
             // Sort button
-            _sortButton = new NiceButton(62, 28, 40, 20, ButtonAction.Activate, "Sort")
+            _sortButton = new NiceButton(62, 28, 40, 20, ButtonAction.Activate, Language.Instance.LegacyGumps.Misc.HbcSort)
             {
                 IsSelectable = true,
                 ButtonParameter = 1
@@ -154,7 +154,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Add Party filter option
             contextMenu.Add(
-                "Party",
+                Language.Instance.LegacyGumps.Misc.PartyMenu,
                 () => TogglePartyFilter(),
                 canBeSelected: true,
                 defaultValue: _filterParty
@@ -162,7 +162,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Add Pets filter option
             contextMenu.Add(
-                "Pets",
+                Language.Instance.LegacyGumps.Misc.PetsMenu,
                 () => TogglePetsFilter(),
                 canBeSelected: true,
                 defaultValue: _filterPets

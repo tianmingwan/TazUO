@@ -101,6 +101,7 @@
     <EmbeddedResource Include="Game\Managers\DefaultSpellIndicatorConfig.json" />
     <EmbeddedResource Include="Configuration\language.ini" />
     <EmbeddedResource Include="Configuration\language.ZH.ini" />
+    <EmbeddedResource Include="Configuration\Language.ZH.json" />
   </ItemGroup>
 
   <ItemGroup>

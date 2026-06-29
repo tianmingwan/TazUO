@@ -67,7 +67,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: playlscript <filename>");
+                        GameActions.Print(world, Language.Instance.Messages.UsagePlayLScript);
 
                         return;
                     }
@@ -88,7 +88,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: stoplscript <filename>");
+                        GameActions.Print(world, Language.Instance.Messages.UsageStopLScript);
 
                         return;
                     }
@@ -109,7 +109,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: togglelscript <filename>");
+                        GameActions.Print(world, Language.Instance.Messages.UsageToggleLScript);
 
                         return;
                     }
@@ -138,7 +138,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (RunningScripts.Count == 0)
                     {
-                        GameActions.Print(world, "No scripts are currently running.");
+                        GameActions.Print(world, Language.Instance.Messages.NoScriptsRunning);
                         return;
                     }
 
@@ -704,11 +704,11 @@ namespace ClassicUO.LegionScripting
                         var client = new System.Net.WebClient();
                         string api = client.DownloadString(new Uri("https://raw.githubusercontent.com/PlayTazUO/TazUO/refs/heads/dev/src/ClassicUO.Client/LegionScripting/docs/API.py"));
                         File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "API.py"), api);
-                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, "Updated API!"); });
+                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, Language.Instance.Messages.UpdatedApi); });
                     }
                     catch (Exception ex)
                     {
-                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, "Failed to update the API..", 32); });
+                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, Language.Instance.Messages.FailedToUpdateApi, 32); });
                         Log.Error(ex.ToString());
                     }
 

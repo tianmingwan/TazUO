@@ -64,7 +64,7 @@ public static class BandageAgentTabContent
         var delayBox = new MyraInputBox
         {
             Text = profile.BandageAgentDelay.ToString(),
-            Tooltip = "Delay between bandage attempts in milliseconds (50-30000)",
+            Tooltip = bandLang.BandageDelayTooltip,
             Width = 80,
         };
         delayBox.TextChangedByUser += (_, _) =>

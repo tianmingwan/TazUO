@@ -29,6 +29,8 @@ namespace ClassicUO.Configuration
     [JsonSerializable(typeof(ItemDatabaseLanguage))]
     [JsonSerializable(typeof(ItemDetailLanguage))]
     [JsonSerializable(typeof(MacrosLanguage))]
+    [JsonSerializable(typeof(MacroTypeNamesLanguage))]
+    [JsonSerializable(typeof(MacroSubTypeNamesLanguage))]
     [JsonSerializable(typeof(SkillsLanguage))]
     [JsonSerializable(typeof(HudLanguage))]
     [JsonSerializable(typeof(SpellBarLanguage))]
@@ -42,6 +44,15 @@ namespace ClassicUO.Configuration
     [JsonSerializable(typeof(MapGumpLanguage))]
     [JsonSerializable(typeof(GridContainerLanguage))]
     [JsonSerializable(typeof(CounterBarLanguage))]
+    [JsonSerializable(typeof(LegacyGumpsLanguage))]
+    [JsonSerializable(typeof(MessagesLanguage))]
+    [JsonSerializable(typeof(GridHighlightLanguage))]
+    [JsonSerializable(typeof(TooltipConfigLanguage))]
+    [JsonSerializable(typeof(DressAgentConfigLanguage))]
+    [JsonSerializable(typeof(MultiItemMoveLanguage))]
+    [JsonSerializable(typeof(MiscGumpsLanguage))]
+    [JsonSerializable(typeof(PaperdollMenuLanguage))]
+    [JsonSerializable(typeof(ScriptConstantsEditorLanguage))]
     public partial class LanguageJsonContext : JsonSerializerContext
     {
     }
@@ -61,6 +72,10 @@ namespace ClassicUO.Configuration
         public MapGumpLanguage MapGump { get; set; } = new();
         public GridContainerLanguage GridContainer { get; set; } = new();
         public CounterBarLanguage CounterBar { get; set; } = new();
+        // Legacy CUO-native gumps that pre-date the JSON localization system.
+        public LegacyGumpsLanguage LegacyGumps { get; set; } = new();
+        // System/status messages emitted from Manager-layer code (GameActions.Print etc).
+        public MessagesLanguage Messages { get; set; } = new();
 
         public string TazuoVersionHistory { get; set; } = "TazUO Version History";
         public string CurrentVersion { get; set; } = "Current Version: ";
@@ -96,6 +111,10 @@ namespace ClassicUO.Configuration
             if (File.Exists(path))
             {
                 Instance = JsonSerializer.Deserialize<Language>(File.ReadAllText(path), options);
+                // Refresh translations shipped in the embedded resource that the user's
+                // existing Data file is missing (older installs). Only string values that still
+                // equal the C# default (English) are overwritten, so user-customized strings survive.
+                MergeEmbeddedTranslations(uiLang);
                 Save(options);
             }
             else if (!uiLang.Equals("EN", StringComparison.OrdinalIgnoreCase))
@@ -113,6 +132,69 @@ namespace ClassicUO.Configuration
             else
             {
                 CreateNewLanguageFile(options);
+            }
+        }
+
+        // Deep-merges translations from the embedded resource for the current language code.
+        // For EN there is nothing to merge (defaults are already English). For other codes the
+        // embedded "<code>" JSON is the authoritative translation source shipped with the build;
+        // any string property in the loaded instance that still holds its English default is
+        // overwritten with the embedded translated value.
+        private static void MergeEmbeddedTranslations(string uiLang)
+        {
+            if (uiLang.Equals("EN", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            string resourceName = $"ClassicUO.Configuration.Language.{uiLang}.json";
+            System.Reflection.Assembly asm = typeof(Language).Assembly;
+            using System.IO.Stream? stream = asm.GetManifestResourceStream(resourceName);
+            if (stream == null) return;
+
+            var options = new JsonSerializerOptions();
+            Language? embedded;
+            try
+            {
+                using var reader = new System.IO.StreamReader(stream);
+                embedded = JsonSerializer.Deserialize<Language>(reader.ReadToEnd(), options);
+            }
+            catch
+            {
+                return;
+            }
+            if (embedded == null) return;
+
+            MergeStringProperties(Instance, embedded, new Language());
+        }
+
+        // Recursively walks the object graph copying string properties from `source` into `target`
+        // whenever `target`'s current value equals the corresponding `defaults` value (i.e. the user
+        // file never provided a translation for that key). `defaults` is the pristine English instance.
+        private static void MergeStringProperties(object? target, object? source, object? defaults)
+        {
+            if (target == null || source == null || defaults == null) return;
+            if (target.GetType() != source.GetType() || target.GetType() != defaults.GetType()) return;
+
+            foreach (var prop in target.GetType().GetProperties())
+            {
+                if (prop.GetMethod == null || prop.SetMethod == null) continue;
+                if (prop.PropertyType == typeof(string))
+                {
+                    string? current = (string?)prop.GetValue(target);
+                    string? def = (string?)prop.GetValue(defaults);
+                    // Only overwrite when the loaded value is still the English default AND the
+                    // embedded translation differs from it (avoids clobbering real translations or
+                    // keys that are intentionally left in English).
+                    if (current != null && def != null && current == def)
+                    {
+                        string? embeddedVal = (string?)prop.GetValue(source);
+                        if (embeddedVal != null && embeddedVal != def)
+                            prop.SetValue(target, embeddedVal);
+                    }
+                }
+                else if (prop.PropertyType.IsClass && prop.PropertyType != typeof(string))
+                {
+                    MergeStringProperties(prop.GetValue(target), prop.GetValue(source), prop.GetValue(defaults));
+                }
             }
         }
 
@@ -958,6 +1040,7 @@ namespace ClassicUO.Configuration
         public string MinGumpDragDist { get; set; } = "Min gump drag distance";
         public string MinGumpDragDistTooltip { get; set; } = "How far you need to drag before a gump will move, this helps prevent accidentally dragging instead of clicking.";
         public string GameScale { get; set; } = "Game scale";
+        public string ApplyScale { get; set; } = "Apply scale";
         public string GameScaleTooltip { get; set; } = "Adjust the scale of the entire game.";
         public string TurnDelay { get; set; } = "Turn delay";
         public string ObjectDelay { get; set; } = "Object delay";
@@ -1022,6 +1105,10 @@ namespace ClassicUO.Configuration
         public SpellIndicatorLanguage SpellIndicator { get; set; } = new();
         public FriendsListLanguage FriendsList { get; set; } = new();
         public PathfindingLanguage Pathfinding { get; set; } = new();
+        // Display names for macro action enums (key = enum member name).
+        // Populated from MacroType / MacroSubType. See MacrosTabContent.GetMacroTypeName().
+        public MacroTypeNamesLanguage MacroTypeNames { get; set; } = new();
+        public MacroSubTypeNamesLanguage MacroSubTypeNames { get; set; } = new();
     }
 
     public class AgentsLanguage
@@ -1074,6 +1161,9 @@ namespace ClassicUO.Configuration
     public class AutoLootAgentLanguage
     {
         public string EnableAutoLoot { get; set; } = "Enable Auto Loot";
+        public string PriorityLow { get; set; } = "Low";
+        public string PriorityNormal { get; set; } = "Normal";
+        public string PriorityHigh { get; set; } = "High";
         public string EnableAutoLootTooltip { get; set; } = "Auto Loot allows you to automatically pick up items from corpses based on configured criteria.";
         public string SetGrabBag { get; set; } = "Set Grab Bag";
         public string TargetContainerToGrabItemsInto { get; set; } = "Target container to grab items into";
@@ -1354,6 +1444,8 @@ namespace ClassicUO.Configuration
     public class GraphicReplacementLanguage
     {
         public string HeaderDescription { get; set; } = "Replace graphics with other graphics. Mobile = animations, Land = terrain tiles, Static = items/statics.";
+        public string ImportTooltip { get; set; } = "Import from your clipboard, must have a valid export copied.";
+        public string ExportTooltip { get; set; } = "Export your filters to your clipboard.";
         public string NoReplacements { get; set; } = "No replacements configured.";
         public string ColOriginal { get; set; } = "Original";
         public string ColType { get; set; } = "Type";
@@ -1386,6 +1478,8 @@ namespace ClassicUO.Configuration
     public class JournalFilterLanguage
     {
         public string HeaderDescription { get; set; } = "Journal Filter hides specific messages from the journal. Messages that match exactly will be filtered out.";
+        public string ImportTooltip { get; set; } = "Import from your clipboard, must have a valid export copied.";
+        public string ExportTooltip { get; set; } = "Export your filters to your clipboard.";
         public string NoFilters { get; set; } = "No filters configured.";
         public string ColFilterText { get; set; } = "Filter Text";
         public string ColActions { get; set; } = "Actions";
@@ -1403,6 +1497,8 @@ namespace ClassicUO.Configuration
     public class SoundFilterLanguage
     {
         public string HeaderDescription { get; set; } = "Sound Filter allows you to mute specific in-game sounds by their ID.";
+        public string ImportTooltip { get; set; } = "Import filtered sounds from clipboard JSON (adds to current filters)";
+        public string ExportTooltip { get; set; } = "Export all filtered sounds as JSON to clipboard";
         public string NoSoundsFiltered { get; set; } = "No sounds filtered.";
         public string TotalFiltered { get; set; } = "Total: {0} sound(s) filtered";
         public string ColSoundId { get; set; } = "Sound ID";
@@ -1434,6 +1530,8 @@ namespace ClassicUO.Configuration
     public class MusicFilterLanguage
     {
         public string HeaderDescription { get; set; } = "Music Filter allows you to mute specific in-game music tracks by their ID.";
+        public string ImportTooltip { get; set; } = "Import filtered music tracks from clipboard JSON (adds to current filters)";
+        public string ExportTooltip { get; set; } = "Export all filtered music tracks as JSON to clipboard";
         public string NoMusicFiltered { get; set; } = "No music filtered.";
         public string TotalFiltered { get; set; } = "Total: {0} track(s) filtered";
         public string ColMusicId { get; set; } = "Music ID";
@@ -1483,6 +1581,7 @@ namespace ClassicUO.Configuration
     {
         public string ProfileNotLoaded { get; set; } = "Profile not loaded";
         public string EnableItemDatabase { get; set; } = "Enable Item Database";
+        public string SearchContainerTooltip { get; set; } = "Search only in this container serial (0 = any)";
         public string ReadyToSearch { get; set; } = "Ready to search";
         public string NoResultsToDisplay { get; set; } = "No results to display";
         public string ItemDatabaseIsDisabled { get; set; } = "Item Database is disabled.";
@@ -1610,6 +1709,28 @@ namespace ClassicUO.Configuration
         public string ClipboardNoValidExport { get; set; } = "Your clipboard does not have a valid macro export copied.";
         public string ExportedMacros { get; set; } = "Exported {0} macro(s) to your clipboard!";
         public string HotkeyAlreadyUsed { get; set; } = "Hotkey already used by macro: {0}";
+        // Legacy macro editor / button editor / macro action status messages
+        public string EditMacro { get; set; } = "Edit macro: {0}";
+        public string NoAction { get; set; } = "No Action";
+        public string EditorFor { get; set; } = "Editor for {0}";
+        public string HideLabel { get; set; } = "Hide Label";
+        public string Scale { get; set; } = "Scale";
+        public string Color { get; set; } = "Color";
+        public string Graphic { get; set; } = "Graphic";
+        public string NotValidRow { get; set; } = "That is not a valid row.";
+        public string SavedMountNotFound { get; set; } = "Saved mount not found.";
+        public string TargetMountToSave { get; set; } = "Target a mount to save it for the Mount macro.";
+        public string TargetPlayerAddFriend { get; set; } = "Target a player to add as a friend.";
+        public string CannotAddSelfAsFriend { get; set; } = "You cannot add yourself as a friend";
+        public string InvalidTargetMustBePlayer { get; set; } = "Invalid target - must be a player";
+        public string TargetFriendToRemove { get; set; } = "Target a friend to remove from your friend list.";
+        public string TargetSystemOff { get; set; } = "Target System: Off";
+        public string TargetSystemOn { get; set; } = "Target System: On";
+        public string MustTargetMobileToSetMount { get; set; } = "You must target a mobile/creature to set as your mount.";
+        public string MountSetWithSerial { get; set; } = "Mount set: {0} (Serial: {1})";
+        public string FavoriteMoveBagSet { get; set; } = "Favorite move bag set.";
+        public string NotAValidContainer { get; set; } = "That doesn't appear to be a valid container.";
+        public string NotAValidItem { get; set; } = "That is not a valid item.";
     }
 
     public class SkillsLanguage
@@ -1880,5 +2001,715 @@ namespace ClassicUO.Configuration
     {
         public string SetSpell { get; set; } = "Set spell";
         public string QuickSetSpell { get; set; } = "Quick set spell";
+    }
+
+    // Container for legacy CUO-native gumps that bypassed the JSON localization system.
+    public class LegacyGumpsLanguage
+    {
+        public GridHighlightLanguage GridHighlight { get; set; } = new();
+        public TooltipConfigLanguage TooltipConfig { get; set; } = new();
+        public DressAgentConfigLanguage DressAgentConfig { get; set; } = new();
+        public MultiItemMoveLanguage MultiItemMove { get; set; } = new();
+        public MiscGumpsLanguage Misc { get; set; } = new();
+        public PaperdollMenuLanguage PaperdollMenu { get; set; } = new();
+        public ScriptConstantsEditorLanguage ScriptConstantsEditor { get; set; } = new();
+    }
+
+    // System/status messages emitted from Manager-layer and Scene-layer code.
+    public class MessagesLanguage
+    {
+        // ToolTipOverrideManager
+        public string DirectoryDoesntExist { get; set; } = "Directory doesn't exist!";
+        public string OverrideFileSavedTo { get; set; } = "The override file has been saved to [{0}]";
+        public string FailedToSaveOverrideFile { get; set; } = "Failed to save the override file!";
+        public string FileDoesntExist { get; set; } = "File doesn't exist!";
+        public string ImportedTooltipOverrides { get; set; } = "Imported {0} tooltip overrides!";
+        public string ImportOverrideError { get; set; } = "It looks like there was an error trying to import your override settings.";
+        // GameScene
+        public string PossibleConnectionHang { get; set; } = "Possible connection hang, resync attempted";
+        // LegionScripting
+        public string UsagePlayLScript { get; set; } = "Usage: playlscript <filename>";
+        public string UsageStopLScript { get; set; } = "Usage: stoplscript <filename>";
+        public string UsageToggleLScript { get; set; } = "Usage: togglelscript <filename>";
+        public string NoScriptsRunning { get; set; } = "No scripts are currently running.";
+        public string UpdatedApi { get; set; } = "Updated API!";
+        public string FailedToUpdateApi { get; set; } = "Failed to update the API..";
+        public string VarsMustHaveName { get; set; } = "Var's must have a name.";
+        // SystemChatControl
+        public string MessageTooLong { get; set; } = "Message too long, sending the first {0} characters.";
+    }
+
+    public class GridHighlightLanguage
+    {
+        // GridHightlightMenu
+        public string Header { get; set; } = "Grid highlighting settings";
+        public string Description { get; set; } = "You can add object properties that you would like the grid to be highlighted for here.";
+        public string Add { get; set; } = "Add +";
+        public string Export { get; set; } = "Export";
+        public string Import { get; set; } = "Import";
+        public string Configs { get; set; } = "Configs";
+        public string Color { get; set; } = "Color";
+        public string ColorTooltip { get; set; } = "Select grid highlight color";
+        public string Properties { get; set; } = "Properties";
+        public string Delete { get; set; } = "X";
+        public string DeleteConfigTooltip { get; set; } = "Delete this highlight configuration";
+        public string Up { get; set; } = "Up";
+        public string UpTooltip { get; set; } = "Move this up in the list";
+        public string Down { get; set; } = "Down";
+        public string DownTooltip { get; set; } = "Move this down in the list";
+        public string SaveDialogTitle { get; set; } = "Save grid highlight settings";
+        public string DefaultFileName { get; set; } = "highlights.json";
+        public string ExportedTo { get; set; } = "Saved highlight export to: {0}";
+        public string ImportDialogTitle { get; set; } = "Import grid highlight settings";
+        public string ImportedFrom { get; set; } = "Imported highlight config from: {0}";
+        public string ImportError { get; set; } = "Error importing highlight config";
+        // GridHighLightProperties
+        public string ExtraPropsTooltip { get; set; } = "Highlight items with properties beyond your configuration.\nWhen checked: The item must match all configured properties and may have extra ones.\nWhen un-checked: The item must match all configured properties and must not have any extra properties.";
+        public string AllowExtraProperties { get; set; } = "Allow extra properties";
+        public string AutoLootTooltip { get; set; } = "Automatically loot items that match this highlight configuration.\nWhen checked: Items matching this configuration will be added to the auto loot queue.";
+        public string AutoLootOnMatch { get; set; } = "Auto loot on match";
+        public string LootContainerTooltip { get; set; } = "Optional destination container serial (leave empty to use default grab bag)";
+        public string LootToContainer { get; set; } = "Loot to container";
+        public string Target { get; set; } = "Target";
+        public string TargetContainerTooltip { get; set; } = "Target a container to loot items into";
+        public string ParseNumberError { get; set; } = "Couldn't parse number";
+        public string MinMatchingCount { get; set; } = "Min. matching count";
+        public string MaxMatchingCount { get; set; } = "Max. matching count";
+        public string MinPropertyCount { get; set; } = "Min. property count";
+        public string MaxPropertyCount { get; set; } = "Max. property count";
+        public string ItemName { get; set; } = "Item name";
+        public string AddItemName { get; set; } = "Add Item Name";
+        public string PropertyName { get; set; } = "Property name";
+        public string MinValue { get; set; } = "Min value";
+        public string Optional { get; set; } = "Optional";
+        public string AddProperty { get; set; } = "Add Property";
+        public string SelectEquipmentSlots { get; set; } = "Select equipment slots";
+        public string OtherNoSlot { get; set; } = "Other / No Slot Assigned";
+        public string DisqualifyingProperties { get; set; } = "Disqualifying Properties";
+        public string WeightFilterTooltip { get; set; } = "Enable weight-based filtering.\nItems with weight outside the specified range will be excluded.\nSet to 0 to disable min or max check.";
+        public string WeightFilter { get; set; } = "Weight filter";
+        public string MinWeightTooltip { get; set; } = "Minimum weight (0 = no minimum)";
+        public string Min { get; set; } = "Min";
+        public string MaxWeightTooltip { get; set; } = "Maximum weight (0 = no maximum)";
+        public string Max { get; set; } = "Max";
+        public string DisqualifyingDesc { get; set; } = "Items with any of these properties will be excluded";
+        public string AddDisqualifyingProperty { get; set; } = "Add Disqualifying Property";
+        public string ItemRarityFilters { get; set; } = "Item Rarity Filters";
+        public string RarityDesc { get; set; } = "Only items with at least one of these rarities will match";
+        public string AddRarityFilter { get; set; } = "Add Rarity Filter";
+        public string DeletePropertyTooltip { get; set; } = "Delete this property";
+        // GridHighLightConfig
+        public string ConfigHeader { get; set; } = "Properties configuration (separated by a new line)";
+        public string CatProperties { get; set; } = "Properties";
+        public string CatSuperSlayers { get; set; } = "Super slayers";
+        public string CatSlayers { get; set; } = "Slayers";
+        public string CatResistances { get; set; } = "Resistances";
+        public string CatNegatives { get; set; } = "Negatives";
+        public string CatRarity { get; set; } = "Rarity";
+        public string Saved { get; set; } = "Saved";
+        // Equipment slot display names (rendered via SplitCamelCase before; now localized).
+        public string SlotTalisman { get; set; } = "Talisman";
+        public string SlotRightHand { get; set; } = "Right Hand";
+        public string SlotLeftHand { get; set; } = "Left Hand";
+        public string SlotHead { get; set; } = "Head";
+        public string SlotEarring { get; set; } = "Earring";
+        public string SlotNeck { get; set; } = "Neck";
+        public string SlotChest { get; set; } = "Chest";
+        public string SlotShirt { get; set; } = "Shirt";
+        public string SlotBack { get; set; } = "Back";
+        public string SlotRobe { get; set; } = "Robe";
+        public string SlotArms { get; set; } = "Arms";
+        public string SlotHands { get; set; } = "Hands";
+        public string SlotBracelet { get; set; } = "Bracelet";
+        public string SlotRing { get; set; } = "Ring";
+        public string SlotBelt { get; set; } = "Belt";
+        public string SlotSkirt { get; set; } = "Skirt";
+        public string SlotLegs { get; set; } = "Legs";
+        public string SlotFootwear { get; set; } = "Footwear";
+    }
+
+    public class TooltipConfigLanguage
+    {
+        public string Title { get; set; } = "Tooltip Override Configuration";
+        public string WikiLink { get; set; } = "Tooltip Overrides Wiki";
+        public string Add { get; set; } = "Add +";
+        public string Export { get; set; } = "Export";
+        public string Import { get; set; } = "Import";
+        public string DeleteAll { get; set; } = "Delete All";
+        public string DeleteAllTooltip { get; set; } = "/c[red]This will remove ALL tooltip override settings.\nThis is not reversible.";
+        public string ConfirmDelete { get; set; } = "Are you sure?";
+        public string SearchTooltip { get; set; } = "This is the search text for matching tooltip lines.";
+        public string ReplaceTooltip { get; set; } = "This is what the matching tooltip line will be replaced with. See the wiki for more details!";
+        public string MinMax { get; set; } = "Min/Max";
+        public string Delete { get; set; } = "X";
+        public string DeleteTooltip { get; set; } = "Delete this override";
+        public string Saved { get; set; } = "Saved";
+    }
+
+    public class DressAgentConfigLanguage
+    {
+        public string SelectConfig { get; set; } = "Select Config:";
+        public string NoConfigs { get; set; } = "No configs available";
+        public string CreateNew { get; set; } = "Create New";
+        public string ConfigName { get; set; } = "Config Name:";
+        public string Character { get; set; } = "Character: {0}";
+        public string UseEquipPackets { get; set; } = "Use Equip Packets (faster)";
+        public string UseEquipPacketsTooltip { get; set; } = "Not all servers support this.";
+        public string AddItemTarget { get; set; } = "Add Item (Target)";
+        public string TargetItemToAdd { get; set; } = "Target item to add to dress config";
+        public string AddAllEquipped { get; set; } = "Add All Equipped";
+        public string ClearAllItems { get; set; } = "Clear All Items";
+        public string SetUndressBag { get; set; } = "Set Undress Bag";
+        public string TargetUndressContainer { get; set; } = "Target container for undress items";
+        public string UndressBagSetTo { get; set; } = "Undress bag set to: {0}";
+        public string Dress { get; set; } = "Dress";
+        public string Undress { get; set; } = "Undress";
+        public string CreateDressMacro { get; set; } = "Create Dress Macro";
+        public string CreatedDressMacro { get; set; } = "Created dress macro: Dress: {0}";
+        public string CreateUndressMacro { get; set; } = "Create Undress Macro";
+        public string CreatedUndressMacro { get; set; } = "Created undress macro: Undress: {0}";
+        public string DeleteConfig { get; set; } = "Delete Config";
+        public string NewConfig { get; set; } = "New Config";
+        public string CreatedNewConfig { get; set; } = "Created new dress config: {0}";
+        public string DeletedSwitchedTo { get; set; } = "Deleted config. Switched to: {0}";
+        public string DeletedSwitchedToReadOnly { get; set; } = "Deleted config. Switched to: {0} ({1}) - Read Only";
+        public string DeletedLastClosing { get; set; } = "Deleted last config. Closing dress agent.";
+        public string ItemsCount { get; set; } = "Items ({0}):";
+        public string Delete { get; set; } = "X";
+        public string NoItems { get; set; } = "No items configured.";
+        public string UseButtonsToAdd { get; set; } = "Use the buttons on the left to add items.";
+        public string Unknown { get; set; } = "Unknown";
+        public string UndressBagNamed { get; set; } = "Undress Bag: {0} ({1})";
+        public string UndressBagBackpack { get; set; } = "Undress Bag: Player Backpack (default)";
+    }
+
+    public class MultiItemMoveLanguage
+    {
+        public string ObjectDelay { get; set; } = "Object delay:";
+        public string MoveToBackpack { get; set; } = "Move to backpack";
+        public string MoveToBackpackTooltip { get; set; } = "Move selected items to your backpack.";
+        public string SetFavoriteBag { get; set; } = "Set favorite bag";
+        public string SetFavoriteBagTooltip { get; set; } = "Set your preferred destination container for future item moves.";
+        public string TargetFavoriteContainer { get; set; } = "Target a container to set as your favorite.";
+        public string ToFavorite { get; set; } = "To favorite";
+        public string ToFavoriteTooltip { get; set; } = "Move selected items to your favorite container.";
+        public string NoFavoriteSet { get; set; } = "No favorite container set. Please target one.";
+        public string FavoriteUnavailable { get; set; } = "Favorite container is not available.";
+        public string Cancel { get; set; } = "Cancel";
+        public string MoveTo { get; set; } = "Move to";
+        public string MoveToTooltip { get; set; } = "Select a container or a ground tile to move these items to.";
+        public string WhereToMove { get; set; } = "Where should we move these items?";
+        public string NotAContainer { get; set; } = "That does not appear to be a container...";
+        public string MovingToContainer { get; set; } = "Moving items to the selected container..";
+        public string MovingItems { get; set; } = "Moving {0} items.";
+        public string SelectedItems { get; set; } = "Selected {0} items.";
+    }
+
+    public class MiscGumpsLanguage
+    {
+        // NameOverHeadHandlerGump
+        public string StayActive { get; set; } = "Stay active";
+        public string HideAbove100Tooltip { get; set; } = "Hide nameplates above 100% health.";
+        public string Hide100WarmodeTooltip { get; set; } = "Only hide 100% hp nameplates in warmode.";
+        // NearbyLootGump
+        public string NearbyCorpseLoot { get; set; } = "Nearby corpse loot";
+        public string OptionsTooltip { get; set; } = "Options";
+        public string LootAll { get; set; } = "Loot All";
+        public string SetLootBag { get; set; } = "Set Loot Bag";
+        public string OpenHumanCorpses { get; set; } = "Open human corpses?";
+        public string HideContainersOnOpen { get; set; } = "Hide containers when opening corpses?";
+        // FileSelector
+        public string FileBrowser { get; set; } = "File Browser";
+        public string Close { get; set; } = "Close";
+        public string CurrentPath { get; set; } = "Current Path:";
+        public string Filter { get; set; } = "Filter:";
+        public string FileName { get; set; } = "File Name:";
+        public string OK { get; set; } = "OK";
+        public string Cancel { get; set; } = "Cancel";
+        public string Ready { get; set; } = "Ready";
+        public string CurrentDir { get; set; } = "(Current Dir)";
+        public string ParentDir { get; set; } = "(Parent Dir)";
+        public string ErrorLoadingDrives { get; set; } = "Error loading drives: ";
+        public string InvalidDirectoryPath { get; set; } = "Invalid directory path";
+        public string FoundDirsFiles { get; set; } = "Found {0} directories and {1} files";
+        public string ErrorPrefix { get; set; } = "Error: ";
+        // RGBColorPickerGump
+        public string SelectColor { get; set; } = "Select Color";
+        // PartyGump
+        public string Msg { get; set; } = "Msg";
+        public string Kick { get; set; } = "Kick";
+        // BoatControl
+        public string Reg { get; set; } = "Reg";
+        public string Slow { get; set; } = "Slow";
+        public string NeedToDriveBoat { get; set; } = "You need to be driving a boat to use this.";
+        // HealthbarCollectorGump
+        public string HealthbarCollector { get; set; } = "Healthbar Collector";
+        public string HbcFilter { get; set; } = "Filter";
+        public string HbcSort { get; set; } = "Sort";
+        public string PartyMenu { get; set; } = "Party";
+        public string PetsMenu { get; set; } = "Pets";
+    }
+
+    public class PaperdollMenuLanguage
+    {
+        public string OpenPaperdollMenu { get; set; } = "Open paperdoll menu";
+        public string VirtuesMenu { get; set; } = "Virtues menu";
+        public string MinimizePaperdoll { get; set; } = "Minimize paperdoll";
+        public string Preview { get; set; } = "Preview";
+        public string Help { get; set; } = "Help";
+        public string Options { get; set; } = "Options";
+        public string LogOut { get; set; } = "Log Out";
+        public string Quests { get; set; } = "Quests";
+        public string Skills { get; set; } = "Skills";
+        public string Guild { get; set; } = "Guild";
+        public string PeaceWar { get; set; } = "Peace/War";
+        public string DurabilityTracker { get; set; } = "Durability Tracker";
+        public string Status { get; set; } = "Status";
+        public string Party { get; set; } = "Party";
+        public string Profile { get; set; } = "Profile";
+        public string Abilities { get; set; } = "Abilities";
+        public string WeaponAbilities { get; set; } = "Weapon abilities";
+        public string OpenAtLocation { get; set; } = "Open paperdoll at this location";
+    }
+
+    public class ScriptConstantsEditorLanguage
+    {
+        public string TitleSuffix { get; set; } = " Constants";
+        public string FilterHint { get; set; } = "Filter constants...";
+        public string ConstantCount { get; set; } = "({0} constant(s))";
+        public string NoConstantsFound { get; set; } = "No constants found in script.\nConstants must be top-level assignments with UPPERCASE names.\nExample:  MAX_DISTANCE = 10";
+        public string NoConstantsMatch { get; set; } = "No constants match the filter.";
+        public string ColConstant { get; set; } = "Constant";
+        public string ColValue { get; set; } = "Value";
+        public string ColLine { get; set; } = "Line";
+        public string OriginalPrefix { get; set; } = "Original: ";
+        public string TrueLabel { get; set; } = "True";
+        public string FalseLabel { get; set; } = "False";
+        public string RemoveElementTooltip { get; set; } = "Remove this element";
+        public string AddElement { get; set; } = "Add Element";
+        public string EditingPrefix { get; set; } = "Editing: ";
+        public string ArrayEditorPrefix { get; set; } = "Array Editor: ";
+        public string UnsavedChanges { get; set; } = "• Unsaved changes";
+        public string RefreshedFromFile { get; set; } = "Refreshed from file";
+        public string NoChangesToSave { get; set; } = "No changes to save";
+        public string SavedSuccessfully { get; set; } = "Saved successfully!";
+    }
+
+    // Display names for each MacroType enum member. Property name == enum member name.
+    // EN defaults use human-readable form (AddSpaceBeforeCapital style).
+    public class MacroTypeNamesLanguage
+    {
+        public string None { get; set; } = "None";
+        public string Say { get; set; } = "Say";
+        public string Emote { get; set; } = "Emote";
+        public string Whisper { get; set; } = "Whisper";
+        public string Yell { get; set; } = "Yell";
+        public string Walk { get; set; } = "Walk";
+        public string WarPeace { get; set; } = "War / Peace";
+        public string Paste { get; set; } = "Paste";
+        public string Open { get; set; } = "Open";
+        public string Close { get; set; } = "Close";
+        public string Minimize { get; set; } = "Minimize";
+        public string Maximize { get; set; } = "Maximize";
+        public string OpenDoor { get; set; } = "Open Door";
+        public string UseSkill { get; set; } = "Use Skill";
+        public string LastSkill { get; set; } = "Last Skill";
+        public string CastSpell { get; set; } = "Cast Spell";
+        public string LastSpell { get; set; } = "Last Spell";
+        public string LastObject { get; set; } = "Last Object";
+        public string Bow { get; set; } = "Bow";
+        public string Salute { get; set; } = "Salute";
+        public string QuitGame { get; set; } = "Quit Game";
+        public string AllNames { get; set; } = "All Names";
+        public string LastTarget { get; set; } = "Last Target";
+        public string TargetSelf { get; set; } = "Target Self";
+        public string ArmDisarm { get; set; } = "Arm / Disarm";
+        public string WaitForTarget { get; set; } = "Wait for Target";
+        public string TargetNext { get; set; } = "Target Next";
+        public string AttackLast { get; set; } = "Attack Last";
+        public string Delay { get; set; } = "Delay";
+        public string CircleTrans { get; set; } = "Circle Trans";
+        public string CloseGump { get; set; } = "Close Gump";
+        public string AlwaysRun { get; set; } = "Always Run";
+        public string SaveDesktop { get; set; } = "Save Desktop";
+        public string KillGumpOpen { get; set; } = "Kill Gump Open";
+        public string PrimaryAbility { get; set; } = "Primary Ability";
+        public string SecondaryAbility { get; set; } = "Secondary Ability";
+        public string EquipLastWeapon { get; set; } = "Equip Last Weapon";
+        public string SetUpdateRange { get; set; } = "Set Update Range";
+        public string ModifyUpdateRange { get; set; } = "Modify Update Range";
+        public string IncreaseUpdateRange { get; set; } = "Increase Update Range";
+        public string DecreaseUpdateRange { get; set; } = "Decrease Update Range";
+        public string MaxUpdateRange { get; set; } = "Max Update Range";
+        public string MinUpdateRange { get; set; } = "Min Update Range";
+        public string DefaultUpdateRange { get; set; } = "Default Update Range";
+        public string EnableRangeColor { get; set; } = "Enable Range Color";
+        public string DisableRangeColor { get; set; } = "Disable Range Color";
+        public string ToggleRangeColor { get; set; } = "Toggle Range Color";
+        public string InvokeVirtue { get; set; } = "Invoke Virtue";
+        public string SelectNext { get; set; } = "Select Next";
+        public string SelectPrevious { get; set; } = "Select Previous";
+        public string SelectNearest { get; set; } = "Select Nearest";
+        public string AttackSelectedTarget { get; set; } = "Attack Selected Target";
+        public string UseSelectedTarget { get; set; } = "Use Selected Target";
+        public string CurrentTarget { get; set; } = "Current Target";
+        public string TargetSystemOnOff { get; set; } = "Target System On/Off";
+        public string ToggleBuffIconGump { get; set; } = "Toggle Buff Icon Gump";
+        public string BandageSelf { get; set; } = "Bandage Self";
+        public string BandageTarget { get; set; } = "Bandage Target";
+        public string ToggleGargoyleFly { get; set; } = "Toggle Gargoyle Fly";
+        public string Zoom { get; set; } = "Zoom";
+        public string ToggleChatVisibility { get; set; } = "Toggle Chat Visibility";
+        public string INVALID { get; set; } = "INVALID";
+        public string Aura { get; set; } = "Aura";
+        public string AuraOnOff { get; set; } = "Aura On/Off";
+        public string Grab { get; set; } = "Grab";
+        public string SetGrabBag { get; set; } = "Set Grab Bag";
+        public string NamesOnOff { get; set; } = "Names On/Off";
+        public string UseItemInHand { get; set; } = "Use Item in Hand";
+        public string UsePotion { get; set; } = "Use Potion";
+        public string CloseAllHealthBars { get; set; } = "Close All Health Bars";
+        public string RazorMacro { get; set; } = "Razor Macro";
+        public string ToggleDrawRoofs { get; set; } = "Toggle Draw Roofs";
+        public string ToggleTreeStumps { get; set; } = "Toggle Tree Stumps";
+        public string ToggleVegetation { get; set; } = "Toggle Vegetation";
+        public string BorderCaveTiles { get; set; } = "Border Cave Tiles";
+        public string CloseInactiveHealthBars { get; set; } = "Close Inactive Health Bars";
+        public string CloseCorpses { get; set; } = "Close Corpses";
+        public string UseObject { get; set; } = "Use Object";
+        public string LookAtMouse { get; set; } = "Look At Mouse";
+        public string UseCounterBar { get; set; } = "Use Counter Bar";
+        public string ClientCommand { get; set; } = "Client Command";
+        public string StunAbility { get; set; } = "Stun Ability";
+        public string DisarmAbility { get; set; } = "Disarm Ability";
+        public string ToggleGump { get; set; } = "Toggle Gump";
+        public string ToggleDurabilityGump { get; set; } = "Toggle Durability Gump";
+        public string ShowNearbyItems { get; set; } = "Show Nearby Items";
+        public string ToggleNearbyLootGump { get; set; } = "Toggle Nearby Loot Gump";
+        public string ToggleLegionScripting { get; set; } = "Toggle Legion Scripting";
+        public string SetSpellBarRow { get; set; } = "Set Spell Bar Row";
+        public string SpellBarRowUp { get; set; } = "Spell Bar Row Up";
+        public string SpellBarRowDown { get; set; } = "Spell Bar Row Down";
+        public string Dismount { get; set; } = "Dismount";
+        public string ToggleHouses { get; set; } = "Toggle Houses";
+        public string ToggleHudVisible { get; set; } = "Toggle Hud Visible";
+        public string Resync { get; set; } = "Resync";
+        public string Mount { get; set; } = "Mount";
+        public string SetMount { get; set; } = "Set Mount";
+        public string AddFriend { get; set; } = "Add Friend";
+        public string RemoveFriend { get; set; } = "Remove Friend";
+        public string ToggleHotkeys { get; set; } = "Toggle Hotkeys";
+        public string ToggleMount { get; set; } = "Toggle Mount";
+        public string ClearHands { get; set; } = "Clear Hands";
+        public string EquipHands { get; set; } = "Equip Hands";
+        public string UseType { get; set; } = "Use Type";
+        public string CastMasterySpell { get; set; } = "Cast Mastery Spell";
+        public string ToggleAutoLoot { get; set; } = "Toggle Auto Loot";
+        public string ToggleVoiceRecognition { get; set; } = "Toggle Voice Recognition";
+        public string SetLastTarget { get; set; } = "Set Last Target";
+        public string ToggleAutoWalk { get; set; } = "Toggle Auto Walk";
+        public string ToggleBandageAgent { get; set; } = "Toggle Bandage Agent";
+        public string SetOrganizerSource { get; set; } = "Set Organizer Source";
+    }
+
+    // Display names for each MacroSubType enum member. Property name == enum member name.
+    // INVALID_* / DEPRECATED* members are skipped (not surfaced in the dropdown).
+    public class MacroSubTypeNamesLanguage
+    {
+        public string MSC_NONE { get; set; } = "None";
+        // Walk group
+        public string NW { get; set; } = "NW";
+        public string N { get; set; } = "N";
+        public string NE { get; set; } = "NE";
+        public string E { get; set; } = "E";
+        public string SE { get; set; } = "SE";
+        public string S { get; set; } = "S";
+        public string SW { get; set; } = "SW";
+        public string W { get; set; } = "W";
+        // Open/Close/Minimize/Maximize group
+        public string Configuration { get; set; } = "Configuration";
+        public string Paperdoll { get; set; } = "Paperdoll";
+        public string Status { get; set; } = "Status";
+        public string Journal { get; set; } = "Journal";
+        public string Skills { get; set; } = "Skills";
+        public string MageSpellbook { get; set; } = "Mage Spellbook";
+        public string Chat { get; set; } = "Chat";
+        public string Backpack { get; set; } = "Backpack";
+        public string Overview { get; set; } = "Overview";
+        public string WorldMap { get; set; } = "World Map";
+        public string Mail { get; set; } = "Mail";
+        public string PartyManifest { get; set; } = "Party Manifest";
+        public string PartyChat { get; set; } = "Party Chat";
+        public string NecroSpellbook { get; set; } = "Necro Spellbook";
+        public string PaladinSpellbook { get; set; } = "Paladin Spellbook";
+        public string CombatBook { get; set; } = "Combat Book";
+        public string BushidoSpellbook { get; set; } = "Bushido Spellbook";
+        public string NinjitsuSpellbook { get; set; } = "Ninjitsu Spellbook";
+        public string Guild { get; set; } = "Guild";
+        public string SpellWeavingSpellbook { get; set; } = "Spell Weaving Spellbook";
+        public string QuestLog { get; set; } = "Quest Log";
+        public string MysticismSpellbook { get; set; } = "Mysticism Spellbook";
+        public string RacialAbilitiesBook { get; set; } = "Racial Abilities Book";
+        public string BardSpellbook { get; set; } = "Bard Spellbook";
+        // Skills group
+        public string Anatomy { get; set; } = "Anatomy";
+        public string AnimalLore { get; set; } = "Animal Lore";
+        public string AnimalTaming { get; set; } = "Animal Taming";
+        public string ArmsLore { get; set; } = "Arms Lore";
+        public string Begging { get; set; } = "Begging";
+        public string Cartography { get; set; } = "Cartography";
+        public string DetectingHidden { get; set; } = "Detecting Hidden";
+        public string Discordance { get; set; } = "Discordance";
+        public string EvaluatingIntelligence { get; set; } = "Evaluating Intelligence";
+        public string ForensicEvaluation { get; set; } = "Forensic Evaluation";
+        public string Hiding { get; set; } = "Hiding";
+        public string Imbuing { get; set; } = "Imbuing";
+        public string Inscription { get; set; } = "Inscription";
+        public string ItemIdentification { get; set; } = "Item Identification";
+        public string Meditation { get; set; } = "Meditation";
+        public string Peacemaking { get; set; } = "Peacemaking";
+        public string Poisoning { get; set; } = "Poisoning";
+        public string Provocation { get; set; } = "Provocation";
+        public string RemoveTrap { get; set; } = "Remove Trap";
+        public string SpiritSpeak { get; set; } = "Spirit Speak";
+        public string Stealing { get; set; } = "Stealing";
+        public string Stealth { get; set; } = "Stealth";
+        public string TasteIdentification { get; set; } = "Taste Identification";
+        public string Tracking { get; set; } = "Tracking";
+        // Arm/Disarm group
+        public string LeftHand { get; set; } = "Left Hand";
+        public string RightHand { get; set; } = "Right Hand";
+        // Invoke Virtue group
+        public string Honor { get; set; } = "Honor";
+        public string Sacrifice { get; set; } = "Sacrifice";
+        public string Valor { get; set; } = "Valor";
+        // Cast Spell group (Magery)
+        public string Clumsy { get; set; } = "Clumsy";
+        public string CreateFood { get; set; } = "Create Food";
+        public string Feeblemind { get; set; } = "Feeblemind";
+        public string Heal { get; set; } = "Heal";
+        public string MagicArrow { get; set; } = "Magic Arrow";
+        public string NightSight { get; set; } = "Night Sight";
+        public string ReactiveArmor { get; set; } = "Reactive Armor";
+        public string Weaken { get; set; } = "Weaken";
+        public string Agility { get; set; } = "Agility";
+        public string Cunning { get; set; } = "Cunning";
+        public string Cure { get; set; } = "Cure";
+        public string Harm { get; set; } = "Harm";
+        public string MagicTrap { get; set; } = "Magic Trap";
+        public string MagicUntrap { get; set; } = "Magic Untrap";
+        public string Protection { get; set; } = "Protection";
+        public string Strength { get; set; } = "Strength";
+        public string Bless { get; set; } = "Bless";
+        public string Fireball { get; set; } = "Fireball";
+        public string MagicLock { get; set; } = "Magic Lock";
+        public string Poison { get; set; } = "Poison";
+        public string Telekinesis { get; set; } = "Telekinesis";
+        public string Teleport { get; set; } = "Teleport";
+        public string Unlock { get; set; } = "Unlock";
+        public string WallOfStone { get; set; } = "Wall of Stone";
+        public string ArchCure { get; set; } = "Arch Cure";
+        public string ArchProtection { get; set; } = "Arch Protection";
+        public string Curse { get; set; } = "Curse";
+        public string FireField { get; set; } = "Fire Field";
+        public string GreaterHeal { get; set; } = "Greater Heal";
+        public string Lightning { get; set; } = "Lightning";
+        public string ManaDrain { get; set; } = "Mana Drain";
+        public string Recall { get; set; } = "Recall";
+        public string BladeSpirits { get; set; } = "Blade Spirits";
+        public string DispellField { get; set; } = "Dispel Field";
+        public string Incognito { get; set; } = "Incognito";
+        public string MagicReflection { get; set; } = "Magic Reflection";
+        public string MindBlast { get; set; } = "Mind Blast";
+        public string Paralyze { get; set; } = "Paralyze";
+        public string PoisonField { get; set; } = "Poison Field";
+        public string SummonCreature { get; set; } = "Summon Creature";
+        public string Dispel { get; set; } = "Dispel";
+        public string EnergyBolt { get; set; } = "Energy Bolt";
+        public string Explosion { get; set; } = "Explosion";
+        public string Invisibility { get; set; } = "Invisibility";
+        public string Mark { get; set; } = "Mark";
+        public string MassCurse { get; set; } = "Mass Curse";
+        public string ParalyzeField { get; set; } = "Paralyze Field";
+        public string Reveal { get; set; } = "Reveal";
+        public string ChainLightning { get; set; } = "Chain Lightning";
+        public string EnergyField { get; set; } = "Energy Field";
+        public string FlameStrike { get; set; } = "Flame Strike";
+        public string GateTravel { get; set; } = "Gate Travel";
+        public string ManaVampire { get; set; } = "Mana Vampire";
+        public string MassDispel { get; set; } = "Mass Dispel";
+        public string MeteorSwarm { get; set; } = "Meteor Swarm";
+        public string Polymorph { get; set; } = "Polymorph";
+        public string Earthquake { get; set; } = "Earthquake";
+        public string EnergyVortex { get; set; } = "Energy Vortex";
+        public string Resurrection { get; set; } = "Resurrection";
+        public string AirElemental { get; set; } = "Air Elemental";
+        public string SummonDaemon { get; set; } = "Summon Daemon";
+        public string EarthElemental { get; set; } = "Earth Elemental";
+        public string FireElemental { get; set; } = "Fire Elemental";
+        public string WaterElemental { get; set; } = "Water Elemental";
+        // Necromancy
+        public string AnimateDead { get; set; } = "Animate Dead";
+        public string BloodOath { get; set; } = "Blood Oath";
+        public string CorpseSkin { get; set; } = "Corpse Skin";
+        public string CurseWeapon { get; set; } = "Curse Weapon";
+        public string EvilOmen { get; set; } = "Evil Omen";
+        public string HorrificBeast { get; set; } = "Horrific Beast";
+        public string LichForm { get; set; } = "Lich Form";
+        public string MindRot { get; set; } = "Mind Rot";
+        public string PainSpike { get; set; } = "Pain Spike";
+        public string PoisonStrike { get; set; } = "Poison Strike";
+        public string Strangle { get; set; } = "Strangle";
+        public string SummonFamiliar { get; set; } = "Summon Familiar";
+        public string VampiricEmbrace { get; set; } = "Vampiric Embrace";
+        public string VengefulSpirit { get; set; } = "Vengeful Spirit";
+        public string Wither { get; set; } = "Wither";
+        public string WraithForm { get; set; } = "Wraith Form";
+        public string Exorcism { get; set; } = "Exorcism";
+        // Paladin
+        public string CleanseByFire { get; set; } = "Cleanse by Fire";
+        public string CloseWounds { get; set; } = "Close Wounds";
+        public string ConsecrateWeapon { get; set; } = "Consecrate Weapon";
+        public string DispelEvil { get; set; } = "Dispel Evil";
+        public string DivineFury { get; set; } = "Divine Fury";
+        public string EnemyOfOne { get; set; } = "Enemy of One";
+        public string HolyLight { get; set; } = "Holy Light";
+        public string NobleSacrifice { get; set; } = "Noble Sacrifice";
+        public string RemoveCurse { get; set; } = "Remove Curse";
+        public string SacredJourney { get; set; } = "Sacred Journey";
+        // Bushido
+        public string HonorableExecution { get; set; } = "Honorable Execution";
+        public string Confidence { get; set; } = "Confidence";
+        public string Evasion { get; set; } = "Evasion";
+        public string CounterAttack { get; set; } = "Counter Attack";
+        public string LightingStrike { get; set; } = "Lighting Strike";
+        public string MomentumStrike { get; set; } = "Momentum Strike";
+        // Ninjitsu
+        public string FocusAttack { get; set; } = "Focus Attack";
+        public string DeathStrike { get; set; } = "Death Strike";
+        public string AnimalForm { get; set; } = "Animal Form";
+        public string KiAttack { get; set; } = "Ki Attack";
+        public string SurpriseAttack { get; set; } = "Surprise Attack";
+        public string Backstab { get; set; } = "Backstab";
+        public string Shadowjump { get; set; } = "Shadowjump";
+        public string MirrorImage { get; set; } = "Mirror Image";
+        // Spellweaving
+        public string ArcaneCircle { get; set; } = "Arcane Circle";
+        public string GiftOfRenewal { get; set; } = "Gift of Renewal";
+        public string ImmolatingWeapon { get; set; } = "Immolating Weapon";
+        public string Attunement { get; set; } = "Attunement";
+        public string Thunderstorm { get; set; } = "Thunderstorm";
+        public string NaturesFury { get; set; } = "Nature's Fury";
+        public string SummonFey { get; set; } = "Summon Fey";
+        public string SummonFiend { get; set; } = "Summon Fiend";
+        public string ReaperForm { get; set; } = "Reaper Form";
+        public string Wildfire { get; set; } = "Wildfire";
+        public string EssenceOfWind { get; set; } = "Essence of Wind";
+        public string DryadAllure { get; set; } = "Dryad Allure";
+        public string EtherealVoyage { get; set; } = "Ethereal Voyage";
+        public string WordOfDeath { get; set; } = "Word of Death";
+        public string GiftOfLife { get; set; } = "Gift of Life";
+        public string ArcaneEmpowerment { get; set; } = "Arcane Empowerment";
+        // Mysticism
+        public string NetherBolt { get; set; } = "Nether Bolt";
+        public string HealingStone { get; set; } = "Healing Stone";
+        public string PurgeMagic { get; set; } = "Purge Magic";
+        public string Enchant { get; set; } = "Enchant";
+        public string Sleep { get; set; } = "Sleep";
+        public string EagleStrike { get; set; } = "Eagle Strike";
+        public string AnimatedWeapon { get; set; } = "Animated Weapon";
+        public string StoneForm { get; set; } = "Stone Form";
+        public string SpellTrigger { get; set; } = "Spell Trigger";
+        public string MassSleep { get; set; } = "Mass Sleep";
+        public string CleansingWinds { get; set; } = "Cleansing Winds";
+        public string Bombard { get; set; } = "Bombard";
+        public string SpellPlague { get; set; } = "Spell Plague";
+        public string HailStorm { get; set; } = "Hail Storm";
+        public string NetherCyclone { get; set; } = "Nether Cyclone";
+        public string RisingColossus { get; set; } = "Rising Colossus";
+        // Select target group
+        public string Hostile { get; set; } = "Hostile";
+        public string Party { get; set; } = "Party";
+        public string Follower { get; set; } = "Follower";
+        public string Object { get; set; } = "Object";
+        public string Mobile { get; set; } = "Mobile";
+        public string MscTotalCount { get; set; } = "Total Count";
+        // Potions
+        public string ConfusionBlastPotion { get; set; } = "Confusion Blast Potion";
+        public string CurePotion { get; set; } = "Cure Potion";
+        public string AgilityPotion { get; set; } = "Agility Potion";
+        public string StrengthPotion { get; set; } = "Strength Potion";
+        public string PoisonPotion { get; set; } = "Poison Potion";
+        public string RefreshPotion { get; set; } = "Refresh Potion";
+        public string HealPotion { get; set; } = "Heal Potion";
+        public string ExplosionPotion { get; set; } = "Explosion Potion";
+        // Zoom
+        public string DefaultZoom { get; set; } = "Default Zoom";
+        public string ZoomIn { get; set; } = "Zoom In";
+        public string ZoomOut { get; set; } = "Zoom Out";
+        // UseObject items
+        public string BestHealPotion { get; set; } = "Best Heal Potion";
+        public string BestCurePotion { get; set; } = "Best Cure Potion";
+        public string BestRefreshPotion { get; set; } = "Best Refresh Potion";
+        public string BestStrengthPotion { get; set; } = "Best Strength Potion";
+        public string BestAgiPotion { get; set; } = "Best Agility Potion";
+        public string BestExplosionPotion { get; set; } = "Best Explosion Potion";
+        public string BestConflagPotion { get; set; } = "Best Conflagration Potion";
+        public string EnchantedApple { get; set; } = "Enchanted Apple";
+        public string PetalsOfTrinsic { get; set; } = "Petals of Trinsic";
+        public string OrangePetals { get; set; } = "Orange Petals";
+        public string TrappedBox { get; set; } = "Trapped Box";
+        public string SmokeBomb { get; set; } = "Smoke Bomb";
+        public string HealStone { get; set; } = "Heal Stone";
+        public string SpellStone { get; set; } = "Spell Stone";
+        // Look
+        public string LookForwards { get; set; } = "Look Forwards";
+        public string LookBackwards { get; set; } = "Look Backwards";
+        // Mastery spells
+        public string Inspire { get; set; } = "Inspire";
+        public string Invigorate { get; set; } = "Invigorate";
+        public string Resilience { get; set; } = "Resilience";
+        public string Perseverance { get; set; } = "Perseverance";
+        public string Tribulation { get; set; } = "Tribulation";
+        public string Despair { get; set; } = "Despair";
+        public string DeathRay { get; set; } = "Death Ray";
+        public string EtherealBurst { get; set; } = "Ethereal Burst";
+        public string NetherBlast { get; set; } = "Nether Blast";
+        public string MysticWeapon { get; set; } = "Mystic Weapon";
+        public string CommandUndead { get; set; } = "Command Undead";
+        public string Conduit { get; set; } = "Conduit";
+        public string ManaShield { get; set; } = "Mana Shield";
+        public string SummonReaper { get; set; } = "Summon Reaper";
+        public string EnchantedSummoning { get; set; } = "Enchanted Summoning";
+        public string AnticipateHit { get; set; } = "Anticipate Hit";
+        public string Warcry { get; set; } = "Warcry";
+        public string Intuition { get; set; } = "Intuition";
+        public string Rejuvenate { get; set; } = "Rejuvenate";
+        public string HolyFist { get; set; } = "Holy Fist";
+        public string Shadow { get; set; } = "Shadow";
+        public string WhiteTigerForm { get; set; } = "White Tiger Form";
+        public string FlamingShot { get; set; } = "Flaming Shot";
+        public string PlayingTheOdds { get; set; } = "Playing the Odds";
+        public string Thrust { get; set; } = "Thrust";
+        public string Pierce { get; set; } = "Pierce";
+        public string Stagger { get; set; } = "Stagger";
+        public string Toughness { get; set; } = "Toughness";
+        public string Onslaught { get; set; } = "Onslaught";
+        public string FocusedEye { get; set; } = "Focused Eye";
+        public string ElementalFury { get; set; } = "Elemental Fury";
+        public string CalledShot { get; set; } = "Called Shot";
+        public string WarriorsGifts { get; set; } = "Warrior's Gifts";
+        public string ShieldBash { get; set; } = "Shield Bash";
+        public string Bodyguard { get; set; } = "Bodyguard";
+        public string HeightenSenses { get; set; } = "Heighten Senses";
+        public string Tolerance { get; set; } = "Tolerance";
+        public string InjectedStrike { get; set; } = "Injected Strike";
+        public string Potency { get; set; } = "Potency";
+        public string Rampage { get; set; } = "Rampage";
+        public string FistsofFury { get; set; } = "Fists of Fury";
+        public string Knockout { get; set; } = "Knockout";
+        public string Whispering { get; set; } = "Whispering";
+        public string CombatTraining { get; set; } = "Combat Training";
+        public string Boarding { get; set; } = "Boarding";
     }
 }
